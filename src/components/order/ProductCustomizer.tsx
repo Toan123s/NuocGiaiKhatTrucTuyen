@@ -1,0 +1,13 @@
+import { useState } from "react";
+import { formatVnd, getUnitPrice } from "../../data/products";
+import type { Product, SizeOption } from "../../types";
+import { CheckIcon, CloseIcon } from "../../shared/icons";
+import { QuantityControl } from "../../shared/ui";
+
+export default function ProductCustomizer({ product, onClose, onAdd }: { product: Product; onClose: () => void; onAdd: (sizeId: SizeOption["id"], toppingIds: string[], quantity: number) => void }) {
+  const [sizeId, setSizeId] = useState<SizeOption["id"]>("M");
+  const [toppingIds, setToppingIds] = useState<string[]>([]);
+  const [quantity, setQuantity] = useState(1);
+  const total = getUnitPrice(product, sizeId, toppingIds) * quantity;
+  return <div className="modal-backdrop" onMouseDown={(event) => event.target === event.currentTarget && onClose()}><div aria-labelledby="customizer-title" aria-modal="true" className="product-modal" role="dialog"><button aria-label="Đóng" className="modal-close" onClick={onClose}><CloseIcon /></button><div className="customizer-image"><img alt={product.name} src={product.imageUrl} />{product.badge && <span className="product-badge">{product.badge}</span>}</div><div className="customizer-content"><span className="product-category">{product.category}</span><h2 id="customizer-title">{product.name}</h2><p>{product.description}</p><fieldset><legend>Chọn kích cỡ <span>Bắt buộc</span></legend><div className="size-options">{product.sizes.map((size) => <label className={sizeId === size.id ? "selected" : ""} key={size.id}><input checked={sizeId === size.id} name="size" onChange={() => setSizeId(size.id)} type="radio" /><strong>{size.id}</strong><span>{size.label}</span><small>{size.delta === 0 ? "Tiêu chuẩn" : `${size.delta > 0 ? "+" : ""}${formatVnd(size.delta)}`}</small></label>)}</div></fieldset><fieldset><legend>Thêm topping <span>Tùy chọn</span></legend><div className="topping-options">{product.toppings.map((topping) => { const checked = toppingIds.includes(topping.id); return <label className={checked ? "selected" : ""} key={topping.id}><input checked={checked} onChange={() => setToppingIds((current) => checked ? current.filter((id) => id !== topping.id) : [...current, topping.id])} type="checkbox" /><span className="fake-check">{checked && <CheckIcon size={14} />}</span><strong>{topping.name}</strong><span>+{formatVnd(topping.price)}</span></label>; })}</div></fieldset><div className="customizer-footer"><QuantityControl onChange={setQuantity} value={quantity} /><button className="button button-primary add-button" onClick={() => onAdd(sizeId, toppingIds, quantity)}>Thêm vào giỏ <span>{formatVnd(total)}</span></button></div></div></div></div>;
+}

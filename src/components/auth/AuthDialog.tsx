@@ -1,0 +1,9 @@
+import { useState, type FormEvent } from "react";
+import type { UserSession } from "../../types";
+import { ArrowIcon, CloseIcon, UserIcon } from "../../shared/icons";
+
+export default function AuthDialog({ onClose, onLogin }: { onClose: () => void; onLogin: (session: UserSession) => void }) {
+  const [email, setEmail] = useState(""); const [password, setPassword] = useState(""); const [error, setError] = useState("");
+  const submit = (event: FormEvent) => { event.preventDefault(); if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return setError("Vui lòng nhập địa chỉ email hợp lệ."); if (password.length < 6) return setError("Mật khẩu cần có ít nhất 6 ký tự."); const rawName = email.split("@")[0].replace(/[._-]/g, " "); onLogin({ email, name: rawName.charAt(0).toUpperCase() + rawName.slice(1) }); };
+  return <div className="modal-backdrop" onMouseDown={(event) => event.target === event.currentTarget && onClose()}><form aria-labelledby="login-title" aria-modal="true" className="auth-modal" onSubmit={submit} role="dialog"><button aria-label="Đóng" className="modal-close" onClick={onClose} type="button"><CloseIcon /></button><span className="auth-mark"><UserIcon /></span><span className="eyebrow"><span /> Chào mừng trở lại</span><h2 id="login-title">Đăng nhập để tiếp tục</h2><p>Đăng nhập nhanh để lưu và theo dõi đơn hàng của bạn.</p><label>Email<input autoFocus onChange={(event) => { setEmail(event.target.value); setError(""); }} placeholder="ban@email.com" type="email" value={email} /></label><label>Mật khẩu<input onChange={(event) => { setPassword(event.target.value); setError(""); }} placeholder="Tối thiểu 6 ký tự" type="password" value={password} /></label>{error && <p className="form-error" role="alert">{error}</p>}<button className="button button-primary auth-submit" type="submit">Đăng nhập & tiếp tục <ArrowIcon /></button><small>Đây là tài khoản demo. BrewLite không lưu mật khẩu của bạn.</small></form></div>;
+}

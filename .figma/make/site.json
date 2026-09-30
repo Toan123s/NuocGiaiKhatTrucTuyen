@@ -1,0 +1,11 @@
+{
+  "title": "Brewlite",
+  "description": "This e-learning platform offers engaging video lessons and tracks quiz completion, empowering learners to enhance their skills and knowledge effectively.",
+  "robots": {
+    "index": false
+  },
+  "accessibility": {
+    "addBypassLinks": false,
+    "ignoreReducedMotion": false
+  }
+}
