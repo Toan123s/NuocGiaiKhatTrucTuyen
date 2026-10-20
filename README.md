@@ -1,224 +1,59 @@
-# BrewLite Tutorial
+# BrewLite
 
-Tài liệu hướng dẫn cài đặt và làm việc với project NuocGiaiKhatTrucTuyen.
+Khung đồ án Công nghệ phần mềm dùng Next.js, NestJS và PostgreSQL. Chỉ giao diện khách hàng.
 
-## 1. Công nghệ
+## Đã làm và chưa làm
 
-- Frontend: React, Vite, TypeScript
-- Backend: Node.js, TypeScript
-- Database: Microsoft SQL Server
-- Package manager: pnpm
+- Đã chạy: trang chính, 40 đồ uống có giá/mô tả, ảnh trống, tìm kiếm/lọc loại, responsive, loading/empty/error; GET /products; health; schema, trigger kiểm tra và dữ liệu demo 7 bảng.
+- Chỉ có file khung: chi tiết món, đăng nhập/đăng ký, giỏ, checkout, thanh toán, kiểm tra kết quả, lịch sử/chi tiết đơn. View chưa có nghiệp vụ, API tương ứng trả HTTP 501.
+- TODO trong source ghi rõ TV phụ trách, method, trang và điều kiện. Không có Admin/nhân viên.
+- Compose hiện chạy DB; Docker web/API, CD và nghiệp vụ bảo mật/thanh toán là phần nhóm tiếp tục làm.
 
-## 2. Cài đặt yêu cầu
+## Chạy bằng PostgreSQL
 
-Cài đặt các công cụ sau:
+Yêu cầu Node.js 22+, npm và PostgreSQL (hoặc Docker Desktop).
 
-- Node.js
-- pnpm
-- Git
-- Microsoft SQL Server
-- SQL Server Management Studio hoặc Azure Data Studio
+1. Clone repo và chuyển sang nhánh `scaffold/brewlite-customer` nếu chưa merge PR.
+2. Tại thư mục gốc, Windows: `copy .env_vidu .env`; macOS/Linux: `cp .env_vidu .env`.
+3. Nếu dùng Docker: `docker compose up -d db`. Nếu có PostgreSQL sẵn: tạo database/user theo `.env`, sửa DB_HOST/DB_PORT/DB_USER/DB_PASSWORD/DB_NAME cho đúng.
+4. `npm install` (các lần sau dùng `npm ci` theo lockfile).
+5. `npm run db:check` → `npm run db:migrate` → `npm run db:seed`.
+6. `npm run dev` rồi mở http://localhost:3000. API: http://localhost:4000/products; health: http://localhost:4000/health.
 
-Kiểm tra phiên bản:
+Không cần tạo .env riêng trong frontend/backend. Cả hai đọc .env tại gốc repo. Chạy lệnh từ gốc bằng npm workspace scripts.
+`.env_vidu` chứa tài khoản ví dụ local, không phải thông tin đăng nhập thật; `.env` đã được gitignore.
+SQL nằm trong `backend/database/001_schema.sql`, `002_integrity.sql`, `003_seed.sql`. Xem [hướng dẫn và dữ liệu test](backend/database/README.md). Seed chạy lại không ghi đè sản phẩm/tồn đã có. Sửa dữ liệu bằng SQL/migration khi cần, chưa cần màn hình quản trị.
+Nếu cổng 3000/4000/5432 đang dùng, giải phóng cổng hoặc đổi cấu hình đồng bộ (API_PORT/API_BASE_URL/FRONTEND_ORIGIN).
 
-```powershell
-node --version
-pnpm --version
-git --version
+## Xem thử chưa cần cài database
+
+Đổi `PRODUCT_DATA_SOURCE=sample` trong `.env`, chạy `npm run dev`. API đọc cùng file seed và health ghi rõ DB chưa kiểm tra. Không tự chuyển sang sample khi DB lỗi. Nghiệm thu phải dùng `postgres`.
+
+## Kiểm tra và build
+
+```sh
+npm run typecheck
+npm test
+npm run build
+npm run start -w backend
+npm run start -w frontend
 ```
 
-## 3. Clone project
+Build frontend không yêu cầu API/DB đang chạy; trang chính lấy dữ liệu theo request lúc runtime.
 
-```powershell
-git clone https://github.com/Toan123s/NuocGiaiKhatTrucTuyen.git
-cd NuocGiaiKhatTrucTuyen
-```
+## Tài liệu cho nhóm
 
-## 4. Cài đặt và chạy frontend
+Backend tách rõ `routes/` → `controllers/` → `services/` → `models/`; xem [Vị trí viết logic và SQL](docs/VI_TRI_CODE.md).
 
-Tại thư mục gốc project:
+- [Phân công 6 thành viên](docs/PHAN_CONG.md)
+- [Lưu ý từng module](docs/LUU_Y_MODULE.md)
+- [Bản đồ file cần sửa](docs/VI_TRI_CODE.md)
+- [Cấu trúc thư mục](docs/CAU_TRUC.md)
+- [Quy ước code](docs/QUY_UOC.md)
+- [Phạm vi bộ khung](docs/YEU_CAU_BO_KHUNG.md)
+- [Database và phần cần bổ sung](backend/database/README.md)
 
-```powershell
-pnpm install
-pnpm dev
-```
+## Lưu ý tiếp tục triển khai
 
-Mở giao diện tại:
-
-```text
-http://localhost:8443/
-```
-
-Nếu terminal thường xuyên bị đóng process Vite, dùng lệnh chạy nền:
-
-```powershell
-pnpm dev:bg
-```
-
-Dừng process đang giữ port:
-
-```powershell
-pnpm dev:stop
-```
-
-Build kiểm tra frontend:
-
-```powershell
-pnpm build
-```
-
-## 5. Cài đặt và chạy backend
-
-```powershell
-cd server
-pnpm install
-Copy-Item .env.example .env
-```
-
-Mở `server/.env` và điền cấu hình SQL Server local:
-
-```env
-DB_SERVER=localhost
-DB_PORT=1433
-DB_NAME=BrewLite
-DB_USER=sa
-DB_PASSWORD=your_sql_server_password
-DB_ENCRYPT=false
-DB_TRUST_SERVER_CERTIFICATE=true
-```
-
-Không commit file `.env` lên Git.
-
-Kiểm tra TypeScript:
-
-```powershell
-pnpm typecheck
-```
-
-Kiểm tra kết nối SQL Server:
-
-```powershell
-pnpm start
-```
-
-Backend hiện mới có phần kết nối database, chưa có API và nghiệp vụ hoàn chỉnh.
-
-## 6. Database backup
-
-Đặt file backup database tại:
-
-```text
-spript/database-backups/
-```
-
-Quy tắc đặt tên:
-
-```text
-BrewLite_YYYY-MM-DD.bak
-```
-
-Ví dụ:
-
-```text
-spript/database-backups/BrewLite_2026-09-30.bak
-```
-
-Backup chỉ nên chứa dữ liệu mẫu hoặc dữ liệu đã ẩn thông tin cá nhân. Không đưa mật khẩu, token hoặc dữ liệu production lên Git.
-
-Có thể backup/restore bằng SQL Server Management Studio:
-
-1. Kết nối SQL Server local.
-2. Chọn database `BrewLite`.
-3. Chọn `Tasks`.
-4. Chọn `Back Up` hoặc `Restore Database`.
-5. Chọn file trong `spript/database-backups/`.
-
-## 7. Cấu trúc thư mục
-
-```text
-src/                         Frontend
-  components/                Thành phần giao diện
-  pages/                     Các trang giao diện
-  data/                      Dữ liệu mẫu
-  domain/                    Logic phía frontend
-  hooks/                     React hooks
-  shared/                    Thành phần dùng chung
-
-server/                      Backend
-  src/
-    config/                  Cấu hình môi trường
-    controllers/             Xử lý request
-    database/                Kết nối SQL Server
-    middlewares/             Auth, validation và error handling
-    models/                  Kiểu dữ liệu
-    repositories/            Đọc/ghi database
-    routes/                  Khai báo API
-    services/                Nghiệp vụ backend
-    shared/                  Thành phần dùng chung
-
-spript/                      Script và backup database
-  database-backups/          File backup SQL Server
-```
-
-## 8. Quy trình Git
-
-Cập nhật code mới trước khi làm việc:
-
-```powershell
-git pull origin main
-```
-
-Tạo branch riêng:
-
-```powershell
-git checkout -b feature/ten-chuc-nang
-```
-
-Kiểm tra thay đổi:
-
-```powershell
-git status
-git diff
-```
-
-Commit:
-
-```powershell
-git add .
-git commit -m "feat: ten chuc nang"
-```
-
-Push branch:
-
-```powershell
-git push origin feature/ten-chuc-nang
-```
-
-Sau đó tạo Pull Request vào branch `main`.
-
-## 9. Quy tắc commit
-
-```text
-feat: thêm chức năng
-fix: sửa lỗi
-refactor: thay đổi cấu trúc code
-docs: cập nhật tài liệu
-chore: cập nhật cấu hình
-```
-
-Ví dụ:
-
-```text
-feat: add product api
-fix: fix cart total
-docs: update tutorial
-```
-
-## 10. Quy tắc bảo mật
-
-- Không commit file `.env`.
-- Không commit mật khẩu SQL Server.
-- Không commit API key hoặc token.
-- Không đưa dữ liệu người dùng thật vào backup.
-- Không kết nối frontend trực tiếp tới SQL Server.
-- Frontend gọi API backend, backend mới làm việc với database.
+JWT/guard/DTO Auth chưa làm: giữ API khung trả 501 cho tới khi bảo mật hoàn chỉnh. Không dùng bản khung làm ứng dụng thu tiền thật.
+Phân công đã cân lại: TV1 làm sản phẩm + khuyến mãi + Docker local; TV2 làm giỏ + giao diện checkout; TV3 làm Auth/bảo mật + CI/required checks; TV4 làm backend đơn/tồn; TV5 làm thanh toán/điểm; TV6 làm theo dõi đơn + CD/production và ghép E2E. Những phần TODO chưa được coi là hoàn thành đề Assignment 2.
