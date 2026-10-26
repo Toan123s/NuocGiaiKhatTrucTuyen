@@ -44,8 +44,6 @@ test("API còn khung trả 501, không nhận đăng nhập/thanh toán giả", 
     ["/auth/register", "POST"],
     ["/orders", "POST"],
     ["/payments", "POST"],
-    ["/orders/me", "GET"],
-    ["/orders/abc", "GET"],
     ["/products/abc", "GET"],
   ]) {
     const response = await fetch(`${origin}${path}`, { method });
