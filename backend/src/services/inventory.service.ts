@@ -1,25 +1,50 @@
-// LOGIC NGHIỆP VỤ tại service này. Gọi InventoryModel trong src/models để truy cập SQL.
-// Thành viên 4 — Inventory. KHUNG CHƯA TRIỂN KHAI, không được coi là nghiệp vụ đã hoàn thành.
-import { Injectable, NotImplementedException } from "@nestjs/common";
-import type {
-  RegisterInput,
-  LoginInput,
-  CreateOrderInput,
-  StockItem,
-  PoolClient,
-  PromotionInput,
-  PaymentInput,
-  PaymentResult,
-  OrderStatus,
-} from "../types/contracts";
+// TV4 — Inventory service: logic giữ và hoàn tồn kho. SQL nằm ở InventoryModel.
+import {
+  ConflictException,
+  Injectable,
+  NotFoundException,
+} from "@nestjs/common";
+import { InventoryModel } from "../models/inventory.model";
+import type { PoolClient, StockItem } from "../types/contracts";
+
 @Injectable()
 export class InventoryService {
-  // TODO TV4: Nội bộ createOrder; gộp số lượng theo productId, kiểm tra stock và version, rollback nếu xung đột.
-  reserveStock(items: StockItem[], transaction: PoolClient): never {
-    throw new NotImplementedException("TV4: reserveStock chưa triển khai");
+  constructor(private readonly inventoryModel: InventoryModel) {}
+
+  // Gộp số lượng theo productId rồi trừ kho; thiếu hàng/tranh tồn thì ném lỗi để transaction rollback.
+  async reserveStock(
+    items: StockItem[],
+    transaction: PoolClient,
+  ): Promise<void> {
+    const totals = new Map<string, number>();
+    for (const item of items) {
+      const current = totals.get(item.productId) ?? 0;
+      totals.set(item.productId, current + item.quantity);
+    }
+
+    for (const [productId, quantity] of totals) {
+      const snapshot = await this.inventoryModel.findStock(productId, transaction);
+      if (snapshot === null) {
+        throw new NotFoundException(`Không tìm thấy sản phẩm ${productId}`);
+      }
+      if (snapshot.stock < quantity) {
+        throw new ConflictException(`Sản phẩm ${productId} không đủ hàng`);
+      }
+
+      const ok = await this.inventoryModel.decreaseStock(
+        productId,
+        quantity,
+        snapshot.version,
+        transaction,
+      );
+      if (!ok) {
+        throw new ConflictException(`Sản phẩm ${productId} vừa bị người khác đặt`);
+      }
+    }
   }
-  // TODO TV4: Nội bộ hủy/thất bại; ghi dấu đã hoàn, tránh hoàn tồn hai lần.
-  releaseStock(orderId: string, transaction: PoolClient): never {
-    throw new NotImplementedException("TV4: releaseStock chưa triển khai");
+
+  // true = vừa hoàn tồn, false = đã hoàn trước đó (không phải lỗi).
+  async releaseStock(orderId: string, transaction: PoolClient): Promise<boolean> {
+    return this.inventoryModel.restoreStockOnce(orderId, transaction);
   }
 }
