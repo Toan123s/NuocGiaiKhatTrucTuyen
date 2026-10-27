@@ -22,8 +22,8 @@ test("GET /products trả menu từ seed, tiền nguyên và ảnh trống", asy
   const response = await fetch(`${origin}/products`);
   assert.equal(response.status, 200);
   const rows = await response.json();
-  assert.equal(rows.length, 40);
-  assert.equal(new Set(rows.map((p: { id: string }) => p.id)).size, 40);
+  assert.equal(rows.length, 36);
+  assert.equal(new Set(rows.map((p: { id: string }) => p.id)).size, 36);
   for (const row of rows) {
     assert.ok(Number.isInteger(row.price) && row.price > 0);
     assert.equal(row.imageUrl, null);
