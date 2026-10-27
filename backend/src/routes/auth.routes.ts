@@ -3,4 +3,5 @@ export const AUTH_ROUTES = {
   base: "auth",
   register: "register",
   login: "login",
+  me: "me",
 } as const;

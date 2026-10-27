@@ -1,4 +1,5 @@
 // TV3 — Client phía server. Không đưa DB_PASSWORD/JWT_SECRET xuống trình duyệt.
+// File này có "server-only" nên component trình duyệt không import được: client chạy trong trình duyệt (kèm JWT, ApiError) nằm ở lib/api-client.ts.
 import "server-only";
 import { Product } from "@/types/product";
 export async function getProducts(): Promise<Product[]> {

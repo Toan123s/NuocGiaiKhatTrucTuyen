@@ -4,8 +4,8 @@ Khung đồ án Công nghệ phần mềm dùng Next.js, NestJS và PostgreSQL. 
 
 ## Đã làm và chưa làm
 
-- Đã chạy: trang chính, 40 đồ uống có giá/mô tả, ảnh trống, tìm kiếm/lọc loại, responsive, loading/empty/error; GET /products; health; schema, trigger kiểm tra và dữ liệu demo 7 bảng.
-- Chỉ có file khung: chi tiết món, đăng nhập/đăng ký, giỏ, checkout, thanh toán, kiểm tra kết quả, lịch sử/chi tiết đơn. View chưa có nghiệp vụ, API tương ứng trả HTTP 501.
+- Đã chạy: trang chính, 40 đồ uống có giá/mô tả, ảnh trống, tìm kiếm/lọc loại, responsive, loading/empty/error; GET /products; health; schema, trigger kiểm tra và dữ liệu demo 7 bảng; đăng ký/đăng nhập (JWT) và guard cho API cần đăng nhập.
+- Chỉ có file khung: chi tiết món, giỏ, checkout, thanh toán, kiểm tra kết quả, lịch sử/chi tiết đơn. View chưa có nghiệp vụ, API tương ứng trả HTTP 501.
 - TODO trong source ghi rõ TV phụ trách, method, trang và điều kiện. Không có Admin/nhân viên.
 - Compose hiện chạy DB; Docker web/API, CD và nghiệp vụ bảo mật/thanh toán là phần nhóm tiếp tục làm.
 
@@ -55,5 +55,5 @@ Backend tách rõ `routes/` → `controllers/` → `services/` → `models/`; xe
 
 ## Lưu ý tiếp tục triển khai
 
-JWT/guard/DTO Auth chưa làm: giữ API khung trả 501 cho tới khi bảo mật hoàn chỉnh. Không dùng bản khung làm ứng dụng thu tiền thật.
+Auth (đăng ký/đăng nhập, JWT, `JwtAuthGuard`) đã có. API đơn/thanh toán vẫn trả 501 và chỉ được bỏ 501 khi gắn `JwtAuthGuard` và kiểm tra chủ đơn (xem `docs/TV3_HUONG_DAN.md`). Không dùng bản khung làm ứng dụng thu tiền thật.
 Phân công đã cân lại: TV1 làm sản phẩm + khuyến mãi + Docker local; TV2 làm giỏ + giao diện checkout; TV3 làm Auth/bảo mật + CI/required checks; TV4 làm backend đơn/tồn; TV5 làm thanh toán/điểm; TV6 làm theo dõi đơn + CD/production và ghép E2E. Những phần TODO chưa được coi là hoàn thành đề Assignment 2.

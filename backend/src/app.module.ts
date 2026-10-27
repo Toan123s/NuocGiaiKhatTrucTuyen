@@ -9,6 +9,9 @@ import { AuthController } from "./controllers/auth/auth.controller";
 import { OrdersController } from "./controllers/customer/orders.controller";
 import { PaymentsController } from "./controllers/customer/payments.controller";
 import { CustomerOrdersController } from "./controllers/customer/customer-orders.controller";
+import { UserModel } from "./models/user.model";
+import { UsersService } from "./services/users.service";
+import { AuthService } from "./services/auth.service";
 @Module({
   controllers: [
     ProductsController,
@@ -18,6 +21,13 @@ import { CustomerOrdersController } from "./controllers/customer/customer-orders
     OrdersController,
     PaymentsController,
   ],
-  providers: [DatabaseService, ProductModel, ProductsService],
+  providers: [
+    DatabaseService,
+    ProductModel,
+    ProductsService,
+    UserModel,
+    UsersService,
+    AuthService,
+  ],
 })
 export class AppModule {}
