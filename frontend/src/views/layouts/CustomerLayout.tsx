@@ -18,7 +18,7 @@ export function CustomerLayout({ children }: { children: React.ReactNode }) {
               Đăng nhập
             </Link>
             <Link href="/cart" className="cart-link">
-              Giỏ hàng <span>0</span>
+              Giỏ hàng <span>ở đây là chuyển sang trang giỏ hàng </span>
             </Link>
           </div>
         </div>

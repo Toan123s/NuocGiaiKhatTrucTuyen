@@ -4,6 +4,7 @@ export interface CartItem {
   size: string;
   toppingIds: string[];
   quantity: number;
+  note: string; // bố sung bởi tv1: yêu cầu thêm ghi chú cho món , dùng chữ nhạt 
 }
 export class CartStore {
   // TODO TV2: gộp key theo productId + size + toppingIds đã sắp xếp; quantity nguyên 1–99.
