@@ -7,18 +7,22 @@ import { AppModule } from "../src/app.module";
 import { ProductsService } from "../src/services/products.service";
 import { ProductModel } from "../src/models/product.model";
 import { DatabaseService } from "../src/config/db";
+
 let app: INestApplication;
 let origin: string;
+
 before(async () => {
   process.env.PRODUCT_DATA_SOURCE = "sample";
   app = await NestFactory.create(AppModule, { logger: false });
   await app.listen(0, "127.0.0.1");
   origin = await app.getUrl();
 });
+
 after(async () => {
   await app?.close();
 });
-test("GET /products trả menu từ seed, tiền nguyên và ảnh trống", async () => {
+
+test("GET /products trả menu từ seed, tiền nguyên và ảnh hợp lệ", async () => {
   const response = await fetch(`${origin}/products`);
   assert.equal(response.status, 200);
   const rows = await response.json();
@@ -26,10 +30,21 @@ test("GET /products trả menu từ seed, tiền nguyên và ảnh trống", asy
   assert.equal(new Set(rows.map((p: { id: string }) => p.id)).size, 36);
   for (const row of rows) {
     assert.ok(Number.isInteger(row.price) && row.price > 0);
-    assert.equal(row.imageUrl, null);
+    assert.ok(row.imageUrl === null || typeof row.imageUrl === "string");
     assert.ok(row.sizes.length > 0);
   }
 });
+
+test("GET /products/:id trả chi tiết món và 404 khi không tìm thấy", async () => {
+  const okRes = await fetch(`${origin}/products/ca-phe-sua`);
+  assert.equal(okRes.status, 200);
+  const product = (await okRes.json()) as { id: string };
+  assert.equal(product.id, "ca-phe-sua");
+
+  const notFoundRes = await fetch(`${origin}/products/abc`);
+  assert.equal(notFoundRes.status, 404);
+});
+
 test("health không giả vờ đã kiểm tra DB trong sample mode", async () => {
   const response = await fetch(`${origin}/health`);
   assert.deepEqual(await response.json(), {
@@ -38,6 +53,7 @@ test("health không giả vờ đã kiểm tra DB trong sample mode", async () =
     database: "not-checked",
   });
 });
+
 test("API còn khung trả 501, không nhận đăng nhập/thanh toán giả", async () => {
   for (const [path, method] of [
     ["/auth/login", "POST"],
@@ -46,12 +62,12 @@ test("API còn khung trả 501, không nhận đăng nhập/thanh toán giả", 
     ["/payments", "POST"],
     ["/orders/me", "GET"],
     ["/orders/abc", "GET"],
-    ["/products/abc", "GET"],
   ]) {
     const response = await fetch(`${origin}${path}`, { method });
     assert.equal(response.status, 501, path);
   }
 });
+
 test("postgres model dùng query và không tự fallback seed khi DB lỗi", async () => {
   const db = new DatabaseService();
   const model = new ProductModel(db);
