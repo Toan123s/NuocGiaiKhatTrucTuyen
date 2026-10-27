@@ -1,5 +1,0 @@
-# TV1 TODO: build Next.js bằng Node 22+; giữ runtime API_BASE_URL trỏ http://api:4000.
-# Chạy npm run start -w frontend; không đưa DB_PASSWORD/JWT_SECRET vào frontend.
-# File .todo chưa phải Dockerfile chạy được; đổi tên và thêm service web vào compose.
-
-# TV1 bàn giao image/build context/cổng/env cho TV6 làm CD/deploy; không tự cấu hình production ở phần local.

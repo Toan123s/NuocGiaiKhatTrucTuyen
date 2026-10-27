@@ -1,28 +1,55 @@
-// LOGIC NGHIỆP VỤ tại service này. Gọi PromotionModel trong src/models để truy cập SQL.
-// Thành viên 1 — Promotions. KHUNG CHƯA TRIỂN KHAI, không được coi là nghiệp vụ đã hoàn thành.
-import { Injectable, NotImplementedException } from "@nestjs/common";
-import type {
-  RegisterInput,
-  LoginInput,
-  CreateOrderInput,
-  StockItem,
-  PoolClient,
-  PromotionInput,
-  PaymentInput,
-  PaymentResult,
-  OrderStatus,
-} from "../types/contracts";
+// TV1 — Luật áp dụng và tính tiền khuyến mãi.
+import { BadRequestException, Inject, Injectable } from "@nestjs/common";
+import { PromotionModel } from "../models/promotion.model";
+import type { Promotion } from "../types/promotion";
+
 @Injectable()
 export class PromotionsService {
-  // TODO TV1: Kiểm tra active, starts_at/ends_at và minimum_amount; gọi PromotionModel.findByCode.
-  // OrdersService của TV4 gọi nội bộ khi xử lý /checkout (UI TV2); mã sai không tạo đơn.
-  // Không gọi service NestJS trực tiếp từ browser. Nếu cần API preview, TV1/TV4 chốt contract trước khi thêm route; khung hiện chưa có route preview riêng.
-  validatePromotion(code: string, subtotal: number): never {
-    throw new NotImplementedException("TV1: validatePromotion chưa triển khai");
+  constructor(
+    @Inject(PromotionModel) private readonly promotionModel: PromotionModel,
+  ) {}
+
+  async validatePromotion(code: string, subtotal: number): Promise<Promotion> {
+    const normalizedCode = code.trim().toUpperCase();
+    if (!normalizedCode) {
+      throw new BadRequestException("Mã giảm giá không được để trống");
+    }
+    if (!Number.isInteger(subtotal) || subtotal < 0) {
+      throw new BadRequestException("Subtotal không hợp lệ");
+    }
+
+    const promotion = await this.promotionModel.findByCode(normalizedCode);
+    if (!promotion) {
+      throw new BadRequestException("Mã giảm giá không tồn tại");
+    }
+
+    const now = new Date();
+    if (
+      !promotion.active ||
+      now < new Date(promotion.starts_at) ||
+      now > new Date(promotion.ends_at)
+    ) {
+      throw new BadRequestException("Mã giảm giá không còn hiệu lực");
+    }
+
+    if (promotion.minimum_amount > subtotal) {
+      throw new BadRequestException(
+        `Đơn tối thiểu ${promotion.minimum_amount} đồng để dùng mã này`,
+      );
+    }
+
+    return promotion;
   }
-  // TODO TV1: OrdersService TV4 gọi nội bộ; PERCENT/FIXED, làm tròn VNĐ theo quy ước nhóm, clamp 0..subtotal.
-  // Test mã hợp lệ/hết hạn/chưa tới hạn/bị tắt/thiếu mức tối thiểu/giảm vượt tổng/100%; không cộng điểm tại đây.
-  calculateDiscount(promotion: PromotionInput, subtotal: number): never {
-    throw new NotImplementedException("TV1: calculateDiscount chưa triển khai");
+
+  async calculateDiscount(code: string, subtotal: number): Promise<number> {
+    const promotion = await this.validatePromotion(code, subtotal);
+    let discount = 0;
+    if (promotion.type === "PERCENT") {
+      discount = Math.floor((subtotal * promotion.value) / 100);
+    } else if (promotion.type === "FIXED") {
+      discount = promotion.value;
+    }
+
+    return Math.min(discount, subtotal);
   }
 }

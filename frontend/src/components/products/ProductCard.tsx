@@ -1,8 +1,14 @@
+"use client";
 // TV1 — Card nối đến file chi tiết còn TODO. Không giả lập thêm giỏ khi Cart chưa triển khai.
+import { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { Product } from "@/types/product";
+
 export function ProductCard({ product: p }: { product: Product }) {
+  const imageUrl = p.imageUrl;
+  const [imageFailed, setImageFailed] = useState(false);
+
   return (
     <article className="product-card">
       <Link
@@ -11,13 +17,14 @@ export function ProductCard({ product: p }: { product: Product }) {
         aria-label={`Xem ${p.name}`}
       >
         {p.badge && <span className="badge">{p.badge}</span>}
-        {p.imageUrl ? (
+        {imageUrl && !imageFailed ? (
           <Image
             className="product-photo"
-            src={p.imageUrl}
+            src={imageUrl}
             alt={p.name}
             fill
             sizes="(max-width: 720px) 100vw, (max-width: 1000px) 33vw, 25vw"
+            onError={() => setImageFailed(true)}
           />
         ) : (
           <span className="photo-placeholder" aria-hidden="true">
