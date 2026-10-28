@@ -1,0 +1,109 @@
+@startuml activity-end-to-end
+title Sơ đồ Hoạt động (Activity Diagram) - Luồng End-to-End từ Xem Menu đến Thanh toán & Tích điểm (BrewLite)
+
+skinparam ConditionEndStyle hline
+skinparam ActivityBackgroundColor #FDFEFE
+skinparam ActivityBorderColor #2C3E50
+skinparam SwimlaneTitleFontStyle bold
+
+|Customer (Khách hàng)|
+start
+:Mở ứng dụng BrewLite (Web/PWA);
+:Xem danh sách đồ uống (Menu);
+
+|BrewLite System (Next.js / NestJS)|
+:Tải và hiển thị danh sách sản phẩm\n(GET /products);
+
+|Customer (Khách hàng)|
+repeat
+  :Chọn sản phẩm, tùy chọn Size (S/M/L) và Topping;
+  
+  |BrewLite System (Next.js / NestJS)|
+  :Kiểm tra số lượng tồn kho hiển thị (stock);
+  if (Sản phẩm còn hàng?) then (Còn hàng)
+    :Tính giá theo tùy chọn (Size + Topping);
+    |Customer (Khách hàng)|
+    :Thêm sản phẩm vào Giỏ hàng (Cart);
+  else (Hết hàng - Out of Stock)
+    |BrewLite System (Next.js / NestJS)|
+    :Hiển thị thông báo "Sản phẩm tạm hết hàng";
+  endif
+  |Customer (Khách hàng)|
+repeat while (Muốn mua thêm sản phẩm khác?) is (Có)
+-> Không;
+
+:Xem Giỏ hàng & Tổng tiền tạm tính;
+:Nhập mã khuyến mãi (Promotion) (nếu có);
+:Nhấn nút "Thanh toán";
+
+|BrewLite System (Next.js / NestJS)|
+if (Đã đăng nhập - Có JWT hợp lệ?) then (Chưa đăng nhập)
+  |Customer (Khách hàng)|
+  :Thực hiện Đăng nhập / Đăng ký tài khoản\n(POST /auth/login hoặc /auth/register);
+  |BrewLite System (Next.js / NestJS)|
+  :Xác thực thông tin và cấp JWT Token;
+else (Đã đăng nhập)
+endif
+
+|Customer (Khách hàng)|
+:Xác nhận đặt đơn hàng;
+
+|BrewLite System (Next.js / NestJS)|
+:Validate dữ liệu giỏ hàng (class-validator);
+:Bắt đầu Database Transaction\n+ Kiểm tra tồn kho đồng thời (Optimistic Locking);
+
+if (Đủ số lượng tồn kho trong DB?) then (Không đủ / Hết hàng)
+  :Rollback Transaction;
+  :Trả về lỗi 409 Conflict (Vượt quá tồn kho);
+  |Customer (Khách hàng)|
+  :Nhận thông báo hết hàng & Cập nhật lại giỏ hàng;
+  stop
+else (Đủ tồn kho)
+  |BrewLite System (Next.js / NestJS)|
+  :Trừ tồn kho tạm giữ & Áp dụng khuyến mãi;
+  :Lưu đơn hàng với trạng thái **PENDING**\n(POST /orders) và sinh Mã đơn;
+  :Commit Transaction;
+endif
+
+|Customer (Khách hàng)|
+repeat
+  :Chọn phương thức thanh toán không tiền mặt\n(Ví điện tử / Thẻ ngân hàng) và Xác nhận trả;
+
+  |BrewLite System (Next.js / NestJS)|
+  :Gửi yêu cầu thanh toán kèm **Idempotency-Key**\n(POST /payments);
+  :Kiểm tra Idempotency-Key tránh trừ tiền/tạo giao dịch trùng;
+
+  |Mock Payment Service|
+  :Xử lý giao dịch thanh toán mô phỏng (Ví / Thẻ);
+
+  |BrewLite System (Next.js / NestJS)|
+  if (Kết quả thanh toán?) then (Thành công - OK)
+    :Chuyển trạng thái đơn hàng:\n**PENDING -> PAID** (Order State Machine);
+    :Tính và cộng điểm thưởng tích lũy (**Loyalty Points**)\ncho tài khoản khách hàng;
+    :Lưu lịch sử giao dịch điểm (LoyaltyTransaction);
+    :Xóa giỏ hàng hiện tại;
+    
+    |Customer (Khách hàng)|
+    :Hiển thị màn hình **Xác nhận đơn hàng**\n(Mã đơn, Trạng thái PAID, Điểm thưởng cộng thêm);
+    :Theo dõi trạng thái đơn (PREPARING -> READY -> COMPLETED)\n& Nhận đồ uống tại quầy;
+    stop
+  else (Thất bại - Lỗi thanh toán)
+    |BrewLite System (Next.js / NestJS)|
+    :Chuyển trạng thái đơn hàng:\n**PENDING -> PAYMENT_FAILED**;
+    :Giữ nguyên giỏ hàng cho khách;
+    :Thông báo lỗi thanh toán;
+  endif
+
+  |Customer (Khách hàng)|
+repeat while (Muốn thử thanh toán lại?) is (Thử lại:\nPAYMENT_FAILED -> PENDING)
+-> Không (Chọn Hủy đơn);
+
+|BrewLite System (Next.js / NestJS)|
+:Chuyển trạng thái đơn hàng:\n**PAYMENT_FAILED -> CANCELLED**;
+:Hoàn trả lại số lượng tồn kho (stock);
+
+|Customer (Khách hàng)|
+:Nhận thông báo đã hủy đơn hàng;
+stop
+
+@enduml
