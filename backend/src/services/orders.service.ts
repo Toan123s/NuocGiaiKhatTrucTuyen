@@ -71,7 +71,7 @@ export class OrdersService {
       const total = subtotal - discount;
 
       // Bước 4: giữ tồn (ném lỗi nếu hết hàng, withTransaction sẽ rollback)
-      await this.inventoryService.reserveStock(input.items, client);
+      await this.inventoryService.reserveStock(input.items, client, orderId);
 
       // Bước 5: ghi đơn rồi ghi chi tiết, cùng một client
       const order = await this.orderModel.insertOrder(
@@ -174,7 +174,7 @@ export class OrdersService {
       }
 
       const items = await this.orderModel.findItemsForStock(orderId, client);
-      await this.inventoryService.reserveStock(items, client);
+      await this.inventoryService.reserveStock(items, client, orderId);
 
       const reopened = await this.orderModel.reopenForRetry(orderId, client);
       if (!reopened) {
