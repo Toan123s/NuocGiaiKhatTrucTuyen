@@ -5,6 +5,7 @@ import {
   BadRequestException,
   ConflictException,
   Injectable,
+  InternalServerErrorException,
   NotFoundException,
   NotImplementedException,
 } from "@nestjs/common";
@@ -14,6 +15,8 @@ import { InventoryService } from "./inventory.service";
 import { calculateUnitPrice } from "./order-pricing";
 import type { CreateOrderInput } from "../types/contracts";
 import type { NewOrderItem } from "../types/order.types";
+import { PromotionsService } from "./promotions.service";
+import { isNumber } from "@nestjs/common/internal";
 
 @Injectable()
 export class OrdersService {
@@ -21,6 +24,7 @@ export class OrdersService {
     private readonly db: DatabaseService,
     private readonly orderModel: OrderModel,
     private readonly inventoryService: InventoryService,
+    private readonly promotionService: PromotionsService
   ) { }
 
   // TODO TV4: previewOrder (xem giá tạm, không ghi DB). Chưa có route riêng; thống nhất request/response với TV1 và TV2 trước.
@@ -33,6 +37,11 @@ export class OrdersService {
     if (!input.items || input.items.length === 0) {
       throw new BadRequestException("Đơn hàng phải có ít nhất một món");
     }
+
+    if (input.promotionCode != null && typeof input.promotionCode !== "string") {
+      throw new BadRequestException("Mã giảm giá phải là chuỗi");
+    }
+
     for (const line of input.items) {
       if (!Number.isInteger(line.quantity) || line.quantity < 1 || line.quantity > 99) {
         throw new BadRequestException(
@@ -67,7 +76,17 @@ export class OrdersService {
 
       // Bước 3: tổng tiền
       const subtotal = orderItems.reduce((sum, item) => sum + item.lineTotal, 0);
-      const discount = 0;
+      let discount = 0;
+      let promotionId: string | null = null;
+      const promotionCode = input.promotionCode?.trim();
+      if (promotionCode) {
+        const promotion = await this.promotionService.validatePromotion(promotionCode, subtotal);
+        discount = await this.promotionService.calculateDiscount(promotionCode, subtotal);
+        promotionId = promotion.id;
+      }
+      if (!Number.isInteger(discount) || discount < 0 || discount > subtotal) {
+        throw new InternalServerErrorException("Số tiền giảm giá không hợp lệ");
+      }
       const total = subtotal - discount;
 
       // Bước 4: giữ tồn (ném lỗi nếu hết hàng, withTransaction sẽ rollback)
@@ -75,7 +94,7 @@ export class OrdersService {
 
       // Bước 5: ghi đơn rồi ghi chi tiết, cùng một client
       const order = await this.orderModel.insertOrder(
-        { id: orderId, userId, subtotal, discount, total, promotionId: null },
+        { id: orderId, userId, subtotal, discount, total, promotionId },
         client,
       );
       await this.orderModel.insertOrderItems(order.id, orderItems, client);

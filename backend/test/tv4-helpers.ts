@@ -66,8 +66,45 @@ export function makeTx(database: PGlite): Tx {
   };
 }
 
+// Bản giả của DatabaseService: withTransaction cho OrdersService, query cho PromotionModel của TV1.
+// (Với pg thật, query chạy trên kết nối riêng; PGlite chỉ có một kết nối nên dùng chung.)
 export function makeFakeDatabase(database: PGlite): DatabaseService {
-  return { withTransaction: makeTx(database) } as unknown as DatabaseService;
+  return {
+    withTransaction: makeTx(database),
+    query: (text: string, params: unknown[] = []) => database.query(text, params),
+  } as unknown as DatabaseService;
+}
+
+// Tạo khuyến mãi riêng cho test; mốc thời gian tính bằng giờ so với hiện tại.
+export async function insertPromotion(
+  database: PGlite,
+  promotion: {
+    id: string;
+    code: string;
+    type: "PERCENT" | "FIXED";
+    value: number;
+    minimumAmount?: number;
+    active?: boolean;
+    startsHoursFromNow?: number;
+    endsHoursFromNow?: number;
+  },
+): Promise<void> {
+  await database.query(
+    `INSERT INTO promotions (id, code, type, value, minimum_amount, active, starts_at, ends_at)
+     VALUES ($1, $2, $3, $4, $5, $6,
+             now() + ($7::int * interval '1 hour'),
+             now() + ($8::int * interval '1 hour'))`,
+    [
+      promotion.id,
+      promotion.code,
+      promotion.type,
+      promotion.value,
+      promotion.minimumAmount ?? 0,
+      promotion.active ?? true,
+      promotion.startsHoursFromNow ?? -24,
+      promotion.endsHoursFromNow ?? 24,
+    ],
+  );
 }
 
 export async function readStock(database: PGlite): Promise<number> {
