@@ -11,6 +11,13 @@ import { PaymentsController } from "./controllers/customer/payments.controller";
 import { CustomerOrdersController } from "./controllers/customer/customer-orders.controller";
 import { PromotionModel } from "./models/promotion.model";
 import { PromotionsService } from "./services/promotions.service";
+import { SepayController } from "./sepay/sepay.controller";
+import { SepayModel } from "./sepay/sepay.model";
+import { SepayService } from "./sepay/sepay.services";
+import { OrderModel } from "./models/order.model";
+import { InventoryModel } from "./models/inventory.model";
+import { OrdersService } from "./services/orders.service";
+import { InventoryService } from "./services/inventory.service";
 @Module({
   controllers: [
     ProductsController,
@@ -19,6 +26,7 @@ import { PromotionsService } from "./services/promotions.service";
     CustomerOrdersController,
     OrdersController,
     PaymentsController,
+    SepayController,
   ],
   providers: [
     DatabaseService,
@@ -26,6 +34,12 @@ import { PromotionsService } from "./services/promotions.service";
     ProductsService,
     PromotionModel,
     PromotionsService,
+    SepayModel,
+    SepayService,
+    OrderModel,
+    InventoryModel,
+    OrdersService,
+    InventoryService,
   ],
 })
 export class AppModule {}
