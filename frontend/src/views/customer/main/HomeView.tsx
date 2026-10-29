@@ -5,6 +5,7 @@ import Link from "next/link";
 import { Product } from "@/types/product";
 import { ProductCard } from "@/components/products/ProductCard";
 const categories = ["Tất cả", "Cà phê", "Trà trái cây", "Matcha", "Khác"];
+
 export function HomeView({
   products,
   loadError = false,
@@ -63,7 +64,7 @@ export function HomeView({
               </strong>
             </div>
             <div className="hero-photo-frame">
-              <span>Thêm ảnh đồ uống</span>
+             <img src="/images/products/logo_main.png" alt="Ảnh đồ uống" />
             </div>
             <div className="visual-bottom">
               FRESHLY MADE <span>WITH LOVE, ALWAYS.</span>
