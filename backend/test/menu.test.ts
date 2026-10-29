@@ -58,8 +58,7 @@ test("API còn khung trả 501, không nhận thanh toán giả", async () => {
   for (const [path, method] of [
     ["/orders", "POST"],
     ["/payments", "POST"],
-    ["/orders/me", "GET"],
-    ["/orders/abc", "GET"],
+    ["/products/abc", "GET"],
   ]) {
     const response = await fetch(`${origin}${path}`, { method });
     assert.equal(response.status, 501, path);
