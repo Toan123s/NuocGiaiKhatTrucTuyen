@@ -74,7 +74,7 @@ Topping được quy ước 50 gram trân châu và 30 gram kem sữa mỗi ph�
 
 Mỗi trạng thái đơn có 12 bản ghi: PENDING, PAYMENT_FAILED, PAID, PREPARING, READY, COMPLETED, CANCELLED. Có thanh toán WALLET/CARD, retry sau thất bại, PROCESSING, đơn chưa thanh toán quá hạn, sản phẩm stock=0/1/2 và sản phẩm còn nhiều. Ảnh vẫn NULL theo yêu cầu.
 
-Khách mẫu: `khach01@brewlite.test` đến `khach24@brewlite.test`. Mật khẩu chung **BrewLite123!**, chỉ lưu bcrypt hash trong SQL. Auth API hiện còn TODO nên tài khoản này dùng khi TV3 hoàn thiện đăng nhập hoặc để test DB.
+Khách mẫu: `khach01@brewlite.test` đến `khach24@brewlite.test`. Mật khẩu chung **BrewLite123!**, chỉ lưu bcrypt hash trong SQL. Đăng nhập được qua `POST /auth/login` hoặc trang `/login`, và dùng được để test DB.
 
 | Mã giảm giá | Ca test                                                 |
 | ----------- | ------------------------------------------------------- |
