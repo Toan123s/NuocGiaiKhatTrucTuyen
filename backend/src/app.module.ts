@@ -55,15 +55,9 @@ import { SepayService } from "./sepay/sepay.services";
     InventoryService,
     SepayModel,
     SepayService,
-  ],
-  providers: [
-    DatabaseService,
-    ProductModel,
-    ProductsService,
-    
-  ,
     OrderStateService,
     CustomerOrdersService,
-  ],
+   CustomerOrderModel,
+  ]
 })
 export class AppModule {}
