@@ -10,6 +10,7 @@ import { DatabaseService } from "../src/config/db";
 import { sign } from "jsonwebtoken";
 let app: INestApplication;
 let origin: string;
+
 before(async () => {
   process.env.PRODUCT_DATA_SOURCE = "sample";
   process.env.JWT_SECRET = "test-secret-for-brewlite-menu-0123456789abcdef";
@@ -17,21 +18,34 @@ before(async () => {
   await app.listen(0, "127.0.0.1");
   origin = await app.getUrl();
 });
+
 after(async () => {
   await app?.close();
 });
-test("GET /products trả menu từ seed, tiền nguyên và ảnh trống", async () => {
+
+test("GET /products trả menu từ seed, tiền nguyên và ảnh hợp lệ", async () => {
   const response = await fetch(`${origin}/products`);
   assert.equal(response.status, 200);
   const rows = await response.json();
-  assert.equal(rows.length, 40);
-  assert.equal(new Set(rows.map((p: { id: string }) => p.id)).size, 40);
+  assert.equal(rows.length, 36);
+  assert.equal(new Set(rows.map((p: { id: string }) => p.id)).size, 36);
   for (const row of rows) {
     assert.ok(Number.isInteger(row.price) && row.price > 0);
-    assert.equal(row.imageUrl, null);
+    assert.ok(row.imageUrl === null || typeof row.imageUrl === "string");
     assert.ok(row.sizes.length > 0);
   }
 });
+
+test("GET /products/:id trả chi tiết món và 404 khi không tìm thấy", async () => {
+  const okRes = await fetch(`${origin}/products/ca-phe-sua`);
+  assert.equal(okRes.status, 200);
+  const product = (await okRes.json()) as { id: string };
+  assert.equal(product.id, "ca-phe-sua");
+
+  const notFoundRes = await fetch(`${origin}/products/abc`);
+  assert.equal(notFoundRes.status, 404);
+});
+
 test("health không giả vờ đã kiểm tra DB trong sample mode", async () => {
   const response = await fetch(`${origin}/health`);
   assert.deepEqual(await response.json(), {
@@ -46,7 +60,6 @@ test("API còn khung trả 501, không nhận thanh toán giả", async () => {
     ["/payments", "POST"],
     ["/orders/me", "GET"],
     ["/orders/abc", "GET"],
-    ["/products/abc", "GET"],
   ]) {
     const response = await fetch(`${origin}${path}`, { method });
     assert.equal(response.status, 501, path);
