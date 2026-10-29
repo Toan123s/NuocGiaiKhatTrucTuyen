@@ -11,7 +11,7 @@ import type {
 import type {
   PoolClient,
   OrderStatus,
-  StockItem,
+  OrderLine,
 } from "../types/contracts";
 
 @Injectable()
@@ -135,14 +135,20 @@ export class OrderModel {
   async findItemsForStock(
     orderId: string,
     transaction: PoolClient,
-  ): Promise<StockItem[]> {
+  ): Promise<OrderLine[]> {
     const result = await transaction.query(
-      `SELECT product_id AS "productId", quantity
+      `SELECT product_id AS "productId", quantity, size,
+              topping_ids AS "toppingIds"
        FROM order_items
        WHERE order_id = $1`,
       [orderId],
     );
-    return result.rows as StockItem[];
+    return result.rows.map((row) => ({
+      productId: row.productId,
+      quantity: row.quantity,
+      size: row.size,
+      toppingIds: row.toppingIds,
+    })) as OrderLine[];
   }
 
   async reopenForRetry(

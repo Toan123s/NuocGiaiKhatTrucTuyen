@@ -1,25 +1,65 @@
 // LOGIC NGHIỆP VỤ tại service này. Gọi UserModel trong src/models để truy cập SQL.
-// Thành viên 3 — Users. KHUNG CHƯA TRIỂN KHAI, không được coi là nghiệp vụ đã hoàn thành.
-import { Injectable, NotImplementedException } from "@nestjs/common";
-import type {
-  RegisterInput,
-  LoginInput,
-  CreateOrderInput,
-  StockItem,
-  PoolClient,
-  PromotionInput,
-  PaymentInput,
-  PaymentResult,
-  OrderStatus,
-} from "../types/contracts";
+// Thành viên 3 — Users. Cửa duy nhất để các service khác đọc/ghi tài khoản; lỗi DB đổi thành 503, không lộ chi tiết kết nối.
+import {
+  ConflictException,
+  HttpException,
+  Inject,
+  Injectable,
+  Logger,
+  NotFoundException,
+  ServiceUnavailableException,
+} from "@nestjs/common";
+import { isUniqueViolation } from "../models/db-errors";
+import { dataSource } from "../config/environment";
+import { UserModel } from "../models/user.model";
+import type { PublicUser, UserRecord } from "../types/auth.types";
 @Injectable()
 export class UsersService {
-  // TODO TV3: AuthService tra user nội bộ; model SQL tham số, không lộ passwordHash ra API.
-  findByEmail(email: string): never {
-    throw new NotImplementedException("TV3: findByEmail chưa triển khai");
+  private readonly logger = new Logger(UsersService.name);
+  constructor(@Inject(UserModel) private readonly model: UserModel) {}
+  // Nội bộ cho AuthService: kết quả có passwordHash nên KHÔNG được trả thẳng ra controller.
+  findByEmail(email: string): Promise<UserRecord | null> {
+    return this.run(() => this.model.findByEmail(email));
   }
-  // TODO TV3: Trang tài khoản tương lai; chỉ đọc user từ JWT đã xác thực.
-  getCurrentUser(userId: string): never {
-    throw new NotImplementedException("TV3: getCurrentUser chưa triển khai");
+  createUser(email: string, passwordHash: string): Promise<PublicUser> {
+    return this.run(async () => {
+      try {
+        return await this.model.createUser(email, passwordHash);
+      } catch (error) {
+        if (isUniqueViolation(error))
+          throw new ConflictException({
+            statusCode: 409,
+            code: "EMAIL_TAKEN",
+            message: "Email này đã được đăng ký. Hãy đăng nhập hoặc dùng email khác.",
+            errors: { email: "Email này đã được đăng ký." },
+          });
+        throw error;
+      }
+    });
+  }
+  // Trang tài khoản/GET /auth/me: chỉ đọc user từ id trong JWT đã xác thực.
+  async getCurrentUser(userId: string): Promise<PublicUser> {
+    const user = await this.run(() => this.model.findById(userId));
+    if (!user)
+      throw new NotFoundException("Không tìm thấy tài khoản của phiên này.");
+    return user;
+  }
+  private async run<T>(operation: () => Promise<T>): Promise<T> {
+    // Sample mode không có DB: từ chối rõ ràng, không giả lập tài khoản.
+    if (dataSource() === "sample")
+      throw new ServiceUnavailableException(
+        "Tài khoản cần PostgreSQL. API đang chạy với PRODUCT_DATA_SOURCE=sample.",
+      );
+    try {
+      return await operation();
+    } catch (error) {
+      if (error instanceof HttpException) throw error;
+      this.logger.error(
+        error instanceof Error ? error.message : "Lỗi không xác định",
+      );
+      throw new ServiceUnavailableException(
+        "Không truy cập được dữ liệu tài khoản. Thử lại sau ít phút.",
+      );
+    }
   }
 }

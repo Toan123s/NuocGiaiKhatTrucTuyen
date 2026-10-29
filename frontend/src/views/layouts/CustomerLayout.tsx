@@ -1,5 +1,6 @@
-// TV1 — Layout khách hàng; không có trang Admin/Nhân viên.
+// TV1 — Layout khách hàng; không có trang Admin/Nhân viên. TV3: khu vực tài khoản trên header dùng <AccountNav />.
 import Link from "next/link";
+import { AccountNav } from "@/features/auth/AccountNav";
 export function CustomerLayout({ children }: { children: React.ReactNode }) {
   return (
     <>
@@ -14,9 +15,7 @@ export function CustomerLayout({ children }: { children: React.ReactNode }) {
             <Link href="/orders">Đơn của tôi</Link>
           </nav>
           <div className="account-nav">
-            <Link href="/login" className="login-link">
-              Đăng nhập
-            </Link>
+            <AccountNav />
             <Link href="/cart" className="cart-link">
               Giỏ hàng <span>ở đây là chuyển sang trang giỏ hàng </span>
             </Link>

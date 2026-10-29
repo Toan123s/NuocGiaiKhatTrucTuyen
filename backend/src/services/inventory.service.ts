@@ -6,6 +6,7 @@ import {
 } from "@nestjs/common";
 import { InventoryModel } from "../models/inventory.model";
 import type { PoolClient, StockItem } from "../types/contracts";
+import type { OrderLine } from "../types/contracts";
 
 @Injectable()
 export class InventoryService {
@@ -13,9 +14,18 @@ export class InventoryService {
 
   // Gộp số lượng theo productId rồi trừ kho; thiếu hàng/tranh tồn thì ném lỗi để transaction rollback.
   async reserveStock(
-    items: StockItem[],
+    items: Array<StockItem | OrderLine>,
     transaction: PoolClient,
+    orderId?: string,
   ): Promise<void> {
+    if (orderId && items.every((item) => "size" in item && "toppingIds" in item)) {
+      const reserved = await this.inventoryModel.reserveIngredients(
+        items as OrderLine[],
+        orderId,
+        transaction,
+      );
+      if (reserved) return;
+    }
     const totals = new Map<string, number>();
     for (const item of items) {
       const current = totals.get(item.productId) ?? 0;

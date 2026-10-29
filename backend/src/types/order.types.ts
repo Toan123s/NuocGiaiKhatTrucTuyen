@@ -1,4 +1,3 @@
-import { Timestamp } from "rxjs";
 import { OrderStatus } from "./contracts";
 
 export interface NewOrder{

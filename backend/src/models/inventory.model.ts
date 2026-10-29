@@ -1,11 +1,77 @@
 // TV4 — Model Inventory: nơi viết SQL đọc/sửa tồn kho (cột stock, version của products).
 // Không tự mở transaction; chỉ dùng PoolClient do service truyền vào.
-import { Injectable } from "@nestjs/common";
+import { ConflictException, Injectable } from "@nestjs/common";
 import type { StockSnapshot } from "../types/order.types";
 import type { PoolClient } from "../types/contracts";
+import type { OrderLine } from "../types/contracts";
 
 @Injectable()
 export class InventoryModel {
+  async reserveIngredients(
+    items: OrderLine[],
+    orderId: string,
+    transaction: PoolClient,
+  ): Promise<boolean> {
+    const schema = await transaction.query<{ exists: boolean }>(
+      "SELECT to_regclass('public.product_recipes') IS NOT NULL AS exists",
+    );
+    if (!schema.rows[0]?.exists) return false;
+    const result = await transaction.query<{
+      ingredientId: string;
+      quantity: number;
+    }>(
+      `WITH requested AS (
+         SELECT item->>'productId' AS product_id,
+                item->>'size' AS size,
+                item->'toppingIds' AS topping_ids,
+                (item->>'quantity')::int AS line_quantity
+         FROM jsonb_array_elements($1::jsonb) AS x(item)
+       ),
+       recipe_rows AS (
+         SELECT r.ingredient_id AS "ingredientId",
+                r.quantity * q.line_quantity AS quantity
+         FROM requested q
+         JOIN product_recipes r ON r.product_id = q.product_id AND r.size = q.size
+         UNION ALL
+         SELECT r.ingredient_id,
+                r.quantity * q.line_quantity
+         FROM requested q
+         CROSS JOIN LATERAL jsonb_array_elements_text(q.topping_ids) topping_id
+         JOIN topping_recipes r
+           ON r.product_id = q.product_id AND r.topping_id = topping_id
+       )
+       SELECT "ingredientId", SUM(quantity)::int AS quantity
+       FROM recipe_rows
+       GROUP BY "ingredientId"`,
+      [JSON.stringify(items)],
+    );
+    if (result.rows.length === 0) {
+      throw new ConflictException(
+        "Sản phẩm hoặc topping chưa có công thức nguyên liệu",
+      );
+    }
+
+    for (const row of result.rows) {
+      const updated = await transaction.query(
+        `UPDATE ingredients
+         SET stock = stock - $2, version = version + 1
+         WHERE id = $1 AND stock >= $2`,
+        [row.ingredientId, row.quantity],
+      );
+      if (updated.rowCount !== 1) {
+        throw new ConflictException(
+          `Nguyên liệu ${row.ingredientId} không đủ tồn kho`,
+        );
+      }
+      await transaction.query(
+        `INSERT INTO order_ingredient_reservations(order_id, ingredient_id, quantity)
+         VALUES ($1, $2, $3)`,
+        [orderId, row.ingredientId, row.quantity],
+      );
+    }
+    return true;
+  }
+
   // Khóa lạc quan: chỉ trừ khi đủ hàng và version chưa bị ai đổi. true = trừ được.
   async decreaseStock(
     productId: string,
@@ -35,6 +101,25 @@ export class InventoryModel {
     );
     if (marked.rowCount !== 1) {
       return false; // đã có người hoàn trước đó
+    }
+    const schema = await transaction.query<{ exists: boolean }>(
+      "SELECT to_regclass('public.order_ingredient_reservations') IS NOT NULL AS exists",
+    );
+    const ingredientResult = schema.rows[0]?.exists
+      ? await transaction.query(
+      `UPDATE ingredients i
+       SET stock = i.stock + r.quantity, version = i.version + 1
+       FROM order_ingredient_reservations r
+       WHERE r.order_id = $1 AND r.ingredient_id = i.id`,
+      [orderId],
+        )
+      : { rowCount: 0 };
+    if (ingredientResult.rowCount && ingredientResult.rowCount > 0) {
+      await transaction.query(
+        "DELETE FROM order_ingredient_reservations WHERE order_id = $1",
+        [orderId],
+      );
+      return true;
     }
     await transaction.query(
       `UPDATE products p
