@@ -7,12 +7,13 @@ import { AppModule } from "../src/app.module";
 import { ProductsService } from "../src/services/products.service";
 import { ProductModel } from "../src/models/product.model";
 import { DatabaseService } from "../src/config/db";
-
+import { sign } from "jsonwebtoken";
 let app: INestApplication;
 let origin: string;
 
 before(async () => {
   process.env.PRODUCT_DATA_SOURCE = "sample";
+  process.env.JWT_SECRET = "test-secret-for-brewlite-menu-0123456789abcdef";
   app = await NestFactory.create(AppModule, { logger: false });
   await app.listen(0, "127.0.0.1");
   origin = await app.getUrl();
@@ -53,11 +54,8 @@ test("health không giả vờ đã kiểm tra DB trong sample mode", async () =
     database: "not-checked",
   });
 });
-
-test("API còn khung trả 501, không nhận đăng nhập/thanh toán giả", async () => {
+test("API còn khung trả 501, không nhận thanh toán giả", async () => {
   for (const [path, method] of [
-    ["/auth/login", "POST"],
-    ["/auth/register", "POST"],
     ["/orders", "POST"],
     ["/payments", "POST"],
     ["/orders/me", "GET"],
@@ -67,7 +65,48 @@ test("API còn khung trả 501, không nhận đăng nhập/thanh toán giả", 
     assert.equal(response.status, 501, path);
   }
 });
-
+function postJson(path: string, body: unknown) {
+  return fetch(`${origin}${path}`, {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify(body),
+  });
+}
+test("auth: kiểm tra dữ liệu trước (400), sample mode không giả lập tài khoản (503)", async () => {
+  assert.equal((await postJson("/auth/login", {})).status, 400);
+  assert.equal(
+    (await postJson("/auth/register", { email: "a@b.co", password: "ngan" })).status,
+    400,
+  );
+  const body = await (await postJson("/auth/login", {})).json();
+  assert.equal(body.code, "VALIDATION_FAILED");
+  assert.ok(body.errors.email && body.errors.password);
+  for (const path of ["/auth/login", "/auth/register"])
+    assert.equal(
+      (await postJson(path, { email: "a@b.co", password: "BrewLite123!" })).status,
+      503,
+      path,
+    );
+});
+test("GET /auth/me cần JWT: thiếu/sai token trả 401 kèm mã lỗi, token đúng qua guard", async () => {
+  const missing = await fetch(`${origin}/auth/me`);
+  assert.equal(missing.status, 401);
+  assert.equal((await missing.json()).code, "TOKEN_MISSING");
+  const bad = await fetch(`${origin}/auth/me`, {
+    headers: { authorization: "Bearer khong.phai.jwt" },
+  });
+  assert.equal(bad.status, 401);
+  assert.equal((await bad.json()).code, "TOKEN_INVALID");
+  const token = sign({ email: "a@b.co" }, process.env.JWT_SECRET ?? "", {
+    subject: "u1",
+    expiresIn: 60,
+  });
+  // Qua guard thì tới service; sample mode không có DB nên 503, quan trọng là không còn 401.
+  const ok = await fetch(`${origin}/auth/me`, {
+    headers: { authorization: `Bearer ${token}` },
+  });
+  assert.equal(ok.status, 503);
+});
 test("postgres model dùng query và không tự fallback seed khi DB lỗi", async () => {
   const db = new DatabaseService();
   const model = new ProductModel(db);
