@@ -3,7 +3,6 @@
 import {
   Inject,
   Injectable,
-  NotFoundException,
   ServiceUnavailableException,
 } from "@nestjs/common";
 import { ProductModel } from "../models/product.model";
@@ -16,23 +15,6 @@ export class ProductsService {
     } catch {
       throw new ServiceUnavailableException(
         "Không tải được menu. Kiểm tra database và chạy migration/seed.",
-      );
-    }
-  }
-
-  async getProductDetail(id: string) {
-    try {
-      const product = await this.model.findById(id);
-      if (!product) {
-        throw new NotFoundException("Không tìm thấy sản phẩm.");
-      }
-      return product;
-    } catch (error) {
-      if (error instanceof NotFoundException) {
-        throw error;
-      }
-      throw new ServiceUnavailableException(
-        "Không tải được sản phẩm. Kiểm tra database và chạy migration/seed.",
       );
     }
   }

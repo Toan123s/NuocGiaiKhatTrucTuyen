@@ -35,31 +35,6 @@ TV4 vẫn phải tính đơn giá chính thức từ catalog trong service; data
 
 002 không thay JWT/kiểm tra quyền sở hữu ở API, không gọi gateway, không tự giữ/hoàn tồn hoặc tự đặt PAID. TV4 vẫn dùng UPDATE theo stock/version và cùng client transaction. Index/constraint chống ghi sai không thay cơ chế idempotency trả lại kết quả trong service.
 
-## SePay sandbox
-
-Migration `004_sepay.sql` bổ sung metadata giao dịch SePay. Endpoint `POST /webhooks/sepay`
-nhận webhook có header `Authorization: Apikey <SEPAY_WEBHOOK_API_KEY>`. Nội dung chuyển
-khoản phải chứa `BREWLITE-ORDER-<order UUID>` và số tiền phải bằng `orders.total`.
-Chỉ webhook hợp lệ mới được ghi payment `SUCCEEDED`, chuyển đơn `PENDING` thành `PAID`
-và ghi `EARN` trong cùng transaction. Gửi lại cùng `id` SePay là thao tác idempotent.
-
-## Tồn kho nguyên liệu
-
-Migration `005_ingredient_inventory.sql` bổ sung `ingredients`, công thức theo size
-(`product_recipes`), công thức topping (`topping_recipes`) và lượng đã giữ theo đơn
-(`order_ingredient_reservations`). Khi migration này có mặt, tạo đơn sẽ trừ nguyên liệu
-theo công thức trong cùng transaction; hủy/thất bại sẽ hoàn đúng lượng đã giữ. `products.stock`
-chỉ còn là đường tương thích cho database cũ chưa có migration 005.
-
-Migration 005 tạo công thức `piece` tạm cho dữ liệu cũ để không làm mất tồn khi nâng cấp.
-Trước khi demo nghiệp vụ pha chế, cần thay các dòng này bằng định lượng thực tế theo `ml`,
-`gram` hoặc `piece`; không dùng giá trị tạm đó làm công thức sản phẩm chính thức.
-
-Migration `006_recipe_catalog.sql` là công thức chính thức của menu: bảng định lượng là
-size S, size M bằng 125% và size L bằng 150%, làm tròn lên từng nguyên liệu. Tồn đầu kỳ
-được đặt là 5.000 theo đơn vị của từng nguyên liệu (5.000 ml, 5.000 gram hoặc 5.000 piece).
-Topping được quy ước 50 gram trân châu và 30 gram kem sữa mỗi phần.
-
 ## Dữ liệu trong 003
 
 | Bảng                 | Số bản ghi |
