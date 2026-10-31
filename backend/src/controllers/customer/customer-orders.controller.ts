@@ -4,9 +4,8 @@
 // Thứ tự khai báo QUAN TRỌNG: "me" phải đứng trước ":id", nếu không "me" bị hiểu là mã đơn.
 // CustomerOrdersController phải đứng trước OrdersController (TV4) trong app.module.ts (hiện đã đúng).
 //
-// TV3 TODO: khi có JwtAuthGuard, thêm @UseGuards(JwtAuthGuard) ở class và guard phải gán
-// request.user = { id } từ JWT đã xác minh. Chưa có guard thì currentUserId() ném 401 => API đóng,
-// không trả dữ liệu của ai.
+// Class gắn @UseGuards(JwtAuthGuard) của TV3: guard xác minh JWT rồi gán request.user = { id, email }.
+// Thiếu/sai/hết hạn token => guard ném 401. currentUserId() vẫn ném 401 nếu vì lý do nào đó chưa có user => API đóng.
 import {
   Controller,
   Get,
@@ -15,7 +14,9 @@ import {
   Query,
   Req,
   UnauthorizedException,
+  UseGuards,
 } from "@nestjs/common";
+import { JwtAuthGuard } from "../../guards/jwt-auth.guard";
 import { CUSTOMER_ROUTES } from "../../routes/customer.routes";
 import { CustomerOrdersService } from "../../services/customer-orders.service";
 import type {
@@ -33,6 +34,7 @@ function currentUserId(req: AuthenticatedRequest): string {
   return id;
 }
 
+@UseGuards(JwtAuthGuard)
 @Controller(CUSTOMER_ROUTES.orders.base)
 export class CustomerOrdersController {
   constructor(
