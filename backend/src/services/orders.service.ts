@@ -4,6 +4,7 @@ import { randomUUID } from "crypto";
 import {
   BadRequestException,
   ConflictException,
+  Inject,
   Injectable,
   InternalServerErrorException,
   NotFoundException,
@@ -16,29 +17,28 @@ import { calculateUnitPrice } from "./order-pricing";
 import type { CreateOrderInput } from "../types/contracts";
 import type { NewOrderItem } from "../types/order.types";
 import { PromotionsService } from "./promotions.service";
-import { isNumber } from "@nestjs/common/internal";
 
 @Injectable()
 export class OrdersService {
   constructor(
-    private readonly db: DatabaseService,
-    private readonly orderModel: OrderModel,
-    private readonly inventoryService: InventoryService,
-    private readonly promotionService: PromotionsService
-  ) { }
+    @Inject(DatabaseService) private readonly db: DatabaseService,
+    @Inject(OrderModel) private readonly orderModel: OrderModel,
+    @Inject(InventoryService) private readonly inventoryService: InventoryService,
+    @Inject(PromotionsService) private readonly promotionService: PromotionsService,
+  ) {}
 
   // TODO TV4: previewOrder (xem giá tạm, không ghi DB). Chưa có route riêng; thống nhất request/response với TV1 và TV2 trước.
   previewOrder(userId: string, input: CreateOrderInput): never {
     throw new NotImplementedException("TV4: previewOrder chưa triển khai");
   }
 
-  // Tạo đơn PENDING + chi tiết + giữ tồn trong một transaction. Khuyến mãi (TV1) chưa nối: discount = 0.
+  // Tạo đơn PENDING + chi tiết + giữ tồn trong một transaction; áp mã khuyến mãi (TV1) nếu có.
   async createOrder(userId: string, input: CreateOrderInput) {
     if (!input.items || input.items.length === 0) {
       throw new BadRequestException("Đơn hàng phải có ít nhất một món");
     }
 
-    if (input.promotionCode != null && typeof input.promotionCode !== "string") {
+   if (input.promotionCode !== undefined && input.promotionCode !== null && typeof input.promotionCode !== "string") {
       throw new BadRequestException("Mã giảm giá phải là chuỗi");
     }
 
@@ -89,15 +89,15 @@ export class OrdersService {
       }
       const total = subtotal - discount;
 
-      // Bước 4: giữ tồn (ném lỗi nếu hết hàng, withTransaction sẽ rollback)
-      await this.inventoryService.reserveStock(input.items, client, orderId);
-
-      // Bước 5: ghi đơn rồi ghi chi tiết, cùng một client
+      // Bước 4: ghi đơn rồi ghi chi tiết, cùng một client
       const order = await this.orderModel.insertOrder(
         { id: orderId, userId, subtotal, discount, total, promotionId },
         client,
       );
       await this.orderModel.insertOrderItems(order.id, orderItems, client);
+
+      // Bước 5: giữ tồn (ném lỗi nếu hết hàng, withTransaction sẽ rollback)
+      await this.inventoryService.reserveStock(input.items, client, orderId);
 
       return {
         orderId: order.id,
@@ -142,7 +142,7 @@ export class OrdersService {
     });
   }
 
-  // Job hủy đơn PENDING quá hạn; mỗi đơn một transaction. Chưa có lịch gọi hàm này.
+  // Job hủy đơn PENDING quá hạn; mỗi đơn một transaction.
   async expirePendingOrders(): Promise<number> {
     const expiredIds = await this.db.withTransaction((client) =>
       this.orderModel.findExpiredPendingOrders(client),
