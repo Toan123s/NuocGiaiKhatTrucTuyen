@@ -46,7 +46,7 @@ export function authConfig(): AuthConfig {
     throw new ConfigurationError(
       "JWT_SECRET đang là giá trị mẫu của máy local. Production phải đặt secret riêng, ngẫu nhiên.",
     );
-  const ttl = Number(process.env.JWT_EXPIRES_IN_SECONDS ?? "3600");
+  const ttl = Number(process.env.JWT_EXPIRES_IN_SECONDS ?? "900");
   if (
     !Number.isInteger(ttl) ||
     ttl < TOKEN_TTL_MIN_SECONDS ||

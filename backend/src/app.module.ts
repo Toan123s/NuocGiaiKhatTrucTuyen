@@ -1,5 +1,4 @@
-
- // TV3 điều phối file dùng chung.
+// TV3 điều phối file dùng chung.
 import { Module } from "@nestjs/common";
 import { DatabaseService } from "./config/db";
 
@@ -16,12 +15,14 @@ import { UsersService } from "./services/users.service";
 import { AuthService } from "./services/auth.service";
 import { PromotionsService } from "./services/promotions.service";
 import { InventoryService } from "./services/inventory.service";
-
+import { CustomerOrdersService } from "./services/customer-orders.service";
+import { OrderStateService } from "./services/order-state.service";
 import { ProductModel } from "./models/product.model";
 import { UserModel } from "./models/user.model";
 import { OrderModel } from "./models/order.model";
 import { PromotionModel } from "./models/promotion.model";
 import { InventoryModel } from "./models/inventory.model";
+import { CustomerOrderModel } from "./models/customer-order.model";
 
 import { SepayController } from "./sepay/sepay.controller";
 import { SepayModel } from "./sepay/sepay.model";
@@ -52,6 +53,9 @@ import { SepayService } from "./sepay/sepay.services";
     InventoryService,
     SepayModel,
     SepayService,
+    CustomerOrdersService,
+    CustomerOrderModel,
+    OrderStateService,
   ],
 })
 export class AppModule {}
