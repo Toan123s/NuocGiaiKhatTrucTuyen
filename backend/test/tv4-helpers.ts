@@ -139,3 +139,97 @@ export async function countOrders(database: PGlite): Promise<number> {
   );
   return result.rows[0].n;
 }
+
+// ---- Phần dùng cho test nguyên liệu (DB đủ 001 đến 006) ----
+export const NO_RECIPE_PRODUCT_ID = "tv4-khong-cong-thuc"; // món không có công thức nguyên liệu
+export const ING_TEA = "tv4-nl-tra"; // nguyên liệu chính của món tv4-tra (ml)
+export const ING_PEARL = "tv4-nl-tc"; // nguyên liệu của topping "tc" (gram)
+export const ING_START = 1000; // tồn đầu mỗi nguyên liệu của TV4
+export const TEA_PER_SIZE: Record<string, number> = { S: 100, M: 125, L: 150 };
+export const PEARL_PER_TOPPING = 50;
+
+// Dựng DB đủ 001 đến 006. Mỗi file nạp bằng một lần exec riêng (mỗi lần là một transaction)
+// để tránh lỗi "pending trigger events" khi 005/006 đổi bảng sau khi 003 vừa chèn dữ liệu.
+// Món và công thức của TV4 được thêm SAU 006, vì 006 xóa công thức tạm của mọi món chưa có trong danh mục.
+export async function createIngredientTestDb(): Promise<PGlite> {
+  const database = new PGlite();
+  const sql = (name: string) =>
+    readFileSync(resolve(__dirname, "../database", name), "utf8");
+  for (const file of [
+    "001_schema.sql",
+    "002_integrity.sql",
+    "003_seed.sql",
+    "004_sepay.sql",
+    "005_ingredient_inventory.sql",
+    "006_recipe_catalog.sql",
+  ]) {
+    await database.exec(sql(file));
+  }
+  const sizes = JSON.stringify([
+    { name: "S", extraPrice: 0 },
+    { name: "M", extraPrice: EXTRA_M },
+    { name: "L", extraPrice: 10000 },
+  ]);
+  const toppings = JSON.stringify([
+    { id: "tc", name: "Trân châu", price: TOPPING_TC },
+  ]);
+  await database.query(
+    `INSERT INTO products (id, name, category, price, stock, sizes, toppings)
+     VALUES ($1, 'Trà TV4', 'test', $2, 10, $3::jsonb, $4::jsonb),
+            ($5, 'Món chưa có công thức', 'test', $2, 10, $3::jsonb, '[]'::jsonb)`,
+    [PRODUCT_ID, UNIT_S, sizes, toppings, NO_RECIPE_PRODUCT_ID],
+  );
+  await database.query(
+    `INSERT INTO ingredients (id, name, unit, stock) VALUES
+       ($1, 'Trà TV4', 'ml', $3), ($2, 'Trân châu TV4', 'gram', $3)`,
+    [ING_TEA, ING_PEARL, ING_START],
+  );
+  for (const [size, quantity] of Object.entries(TEA_PER_SIZE)) {
+    await database.query(
+      `INSERT INTO product_recipes (product_id, size, ingredient_id, quantity)
+       VALUES ($1, $2, $3, $4)`,
+      [PRODUCT_ID, size, ING_TEA, quantity],
+    );
+  }
+  await database.query(
+    `INSERT INTO topping_recipes (product_id, topping_id, ingredient_id, quantity)
+     VALUES ($1, 'tc', $2, $3)`,
+    [PRODUCT_ID, ING_PEARL, PEARL_PER_TOPPING],
+  );
+  return database;
+}
+
+export async function readIngredient(
+  database: PGlite,
+  ingredientId: string,
+): Promise<number> {
+  const result = await database.query<{ stock: number }>(
+    "SELECT stock FROM ingredients WHERE id = $1",
+    [ingredientId],
+  );
+  return result.rows[0].stock;
+}
+
+export async function setIngredient(
+  database: PGlite,
+  ingredientId: string,
+  stock: number,
+): Promise<void> {
+  await database.query("UPDATE ingredients SET stock = $1 WHERE id = $2", [
+    stock,
+    ingredientId,
+  ]);
+}
+
+export async function readReservations(
+  database: PGlite,
+  orderId: string,
+): Promise<Array<{ ingredientId: string; quantity: number }>> {
+  const result = await database.query<{ ingredientId: string; quantity: number }>(
+    `SELECT ingredient_id AS "ingredientId", quantity
+     FROM order_ingredient_reservations WHERE order_id = $1
+     ORDER BY ingredient_id`,
+    [orderId],
+  );
+  return result.rows;
+}
