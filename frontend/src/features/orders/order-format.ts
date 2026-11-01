@@ -19,7 +19,7 @@ export function formatDateTime(iso: string): string {
   }).format(date);
 }
 
-/** Mã đơn ngắn gọn để đọc cho nhân viên; trang chi tiết vẫn hiện mã đầy đủ. */
+/** Mã đơn ngắn gọn (8 ký tự cuối, in hoa) để khách đọc cho nhân viên. Đường dẫn và API vẫn dùng mã đầy đủ. */
 export function shortOrderId(id: string): string {
   return id.length <= 12 ? id : id.slice(-8).toUpperCase();
 }

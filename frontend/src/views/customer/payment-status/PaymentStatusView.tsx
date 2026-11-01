@@ -7,7 +7,7 @@ import { Suspense, useEffect, useRef } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { usePaymentOutcome } from "@/features/orders/use-payment-outcome";
-import { formatVnd } from "@/features/orders/order-format";
+import { formatVnd, shortOrderId } from "@/features/orders/order-format";
 import { CartStore } from "@/features/cart/cart.store";
 import {
   FailureBlock,
@@ -15,8 +15,8 @@ import {
 } from "@/components/orders/OrderBlocks";
 import "@/components/orders/orders.css";
 
-// TODO TV2: CartStore hiện là file khung (clearAfterPayment ném lỗi). Khi TV2 chốt API giỏ (hook/singleton),
-// chỉ cần sửa hàm này. Lỗi chỉ ghi log, không làm hỏng trang kết quả.
+// Chỉ gọi khi kết quả chính thức là PAID. CartStore (TV2) lưu giỏ ở localStorage và tự báo cho header cập nhật,
+// nên dùng instance mới vẫn xóa đúng giỏ. Lỗi chỉ ghi log, không làm hỏng trang kết quả.
 function clearCartAfterPayment() {
   try {
     new CartStore().clearAfterPayment();
@@ -92,7 +92,7 @@ function PaymentStatusContent() {
           <>
             <h1>Thanh toán thành công</h1>
             <p>
-              Đơn #{order.id} · {formatVnd(order.total)}
+              Đơn #{shortOrderId(order.id)} · {formatVnd(order.total)}
             </p>
             {order.pointsEarned !== null ? (
               <p>Bạn nhận được +{order.pointsEarned} điểm thưởng.</p>

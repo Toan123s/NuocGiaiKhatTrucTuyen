@@ -19,6 +19,7 @@ import {
   PAYMENT_STATUS_LABEL,
   formatDateTime,
   formatVnd,
+  shortOrderId,
   humanizeId,
 } from "@/features/orders/order-format";
 import {
@@ -142,10 +143,13 @@ function OrderBody({
   const payHref = `/payment?orderId=${encodeURIComponent(orderId)}`; // trang của TV5
   return (
     <>
-      <h1>Đơn #{order.id}</h1>
+      <h1>Đơn #{shortOrderId(order.id)}</h1>
       <p className="ord-sub">
         <StatusBadge status={order.status} /> · đặt lúc{" "}
         {formatDateTime(order.createdAt)}
+      </p>
+      <p className="ord-meta" title="Mã đầy đủ dùng khi cần hỗ trợ">
+        Mã đầy đủ: {order.id}
       </p>
 
       {order.status === "PENDING" ? (
