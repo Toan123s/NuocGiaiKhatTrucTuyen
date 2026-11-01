@@ -1,7 +1,9 @@
-import { Injectable, OnModuleDestroy, OnModuleInit } from "@nestjs/common";
+import { Inject, Injectable, OnModuleDestroy, OnModuleInit } from "@nestjs/common";
 import { dataSource } from "../config/environment";
 import { OrdersService } from "./orders.service";
 
+// LƯU Ý TV4: job này CHƯA được đăng ký trong providers của app.module.ts (file chung) nên hiện CHƯA chạy.
+// Khi nhóm đồng ý, thêm OrderExpiryJob vào providers của AppModule. Chế độ sample tự bỏ qua (không có DB).
 const INTERVAL_MS = 60_000; // kiểm tra mỗi 60 giây
 
 @Injectable()
@@ -9,7 +11,9 @@ export class OrderExpiryJob implements OnModuleInit, OnModuleDestroy {
   private timer: NodeJS.Timeout | null = null;
   private running = false;
 
-  constructor(private readonly ordersService: OrdersService) {}
+  constructor(
+    @Inject(OrdersService) private readonly ordersService: OrdersService,
+  ) {}
 
   onModuleInit() {
     if (dataSource() === "sample") {
