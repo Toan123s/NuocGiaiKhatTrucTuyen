@@ -6,6 +6,10 @@ import { OrdersService } from "../../services/orders.service";
 import type { AuthenticatedUser } from "../../types/auth.types";
 import type { CreateOrderInput } from "../../types/contracts";
 
+// LƯU Ý TV4: mới có đặt đơn và hủy đơn. CHƯA có route xem giá tạm (OrdersService.previewOrder) vì cần chốt
+// request/response với TV2 và TV1 rồi thêm vào routes/customer.routes.ts (file chung).
+// Route thử lại thanh toán (preparePaymentRetry) thuộc TV5. CustomerOrdersController (TV6) dùng chung đường dẫn
+// gốc "orders" nhưng khác route.
 @Controller(CUSTOMER_ROUTES.orders.base)
 @UseGuards(JwtAuthGuard)
 export class OrdersController {
