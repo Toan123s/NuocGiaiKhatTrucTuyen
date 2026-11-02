@@ -4,6 +4,7 @@ import type {
   OrderDetail,
   OrderListPage,
 } from "@/types/customer-order";
+import { loadSession } from "@/features/auth/session";
 
 // Cần cấu hình khi build production (Docker/CD): NEXT_PUBLIC_API_BASE_URL=https://<api>.
 const API_BASE = (
@@ -20,10 +21,10 @@ export class ApiError extends Error {
   }
 }
 
-// TODO TV3: trả access token theo cách nhóm chốt (bộ nhớ/cookie...). Chưa có phiên → null → backend trả 401.
-// Nếu TV3 dùng cookie httpOnly thì thêm credentials: "include" ở request() và bật credentials trong CORS backend.
+// Lấy token từ phiên TV3 lưu trong localStorage (key "brewlite.session").
+// loadSession() tự bỏ qua phiên sai hình dạng/hết hạn và trả null khi chạy phía server.
 function getAccessToken(): string | null {
-  return null;
+  return loadSession()?.accessToken ?? null;
 }
 
 export function isAbortError(error: unknown): boolean {
