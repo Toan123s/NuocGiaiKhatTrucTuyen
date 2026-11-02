@@ -1,26 +1,21 @@
-// LOGIC NGHIỆP VỤ tại service này. Gọi LoyaltyModel trong src/models để truy cập SQL.
-// Thành viên 5 — Loyalty. KHUNG CHƯA TRIỂN KHAI, không được coi là nghiệp vụ đã hoàn thành.
-import { Injectable, NotImplementedException } from "@nestjs/common";
-import type {
-  RegisterInput,
-  LoginInput,
-  CreateOrderInput,
-  StockItem,
-  PoolClient,
-  PromotionInput,
-  PaymentInput,
-  PaymentResult,
-  OrderStatus,
-} from "../types/contracts";
+import { Inject, Injectable } from "@nestjs/common";
+import { LoyaltyModel } from "../models/loyalty.model.js";
+import type { PoolClient } from "../types/contracts.js";
+
 @Injectable()
 export class LoyaltyService {
-  // TODO TV5: Chỉ gọi trong transaction chốt PAID; unique EARN theo orderId, trigger DB tự cộng tổng điểm; không UPDATE users thêm lần nữa.
-  earnPoints(
+  constructor(@Inject(LoyaltyModel) private readonly loyaltyModel: LoyaltyModel) {}
+
+  // Chỉ gọi trong transaction chốt PAID; unique EARN theo orderId, trigger DB tự cộng tổng điểm
+  async earnPoints(
     userId: string,
     orderId: string,
     amount: number,
     transaction: PoolClient,
-  ): never {
-    throw new NotImplementedException("TV5: earnPoints chưa triển khai");
+  ): Promise<void> {
+    // Tỷ lệ quy đổi: 10.000 VNĐ = 1 điểm
+    const points = Math.floor(amount / 10000);
+
+    await this.loyaltyModel.insertEarnOnce(userId, orderId, points, transaction);
   }
 }

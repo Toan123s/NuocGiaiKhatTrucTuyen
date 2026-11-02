@@ -1,10 +1,12 @@
 // TV3 duy trì runner/checksum/transaction; mỗi TV đề xuất migration phần mình. TV1 dùng khi dựng local, TV6 dùng trong CD.
 // SQL 001/002: schema và kiểm tra DB. SQL 003: dữ liệu demo, không tự chạy khi start ứng dụng.
-import "../src/config/environment";
+import "../src/config/environment.js";
 import { readFileSync, readdirSync } from "node:fs";
-import { resolve } from "node:path";
+import { dirname, resolve } from "node:path";
 import { createHash } from "node:crypto";
-import { DatabaseService } from "../src/config/db";
+import { fileURLToPath } from "node:url";
+import { DatabaseService } from "../src/config/db.js";
+const __dirname = dirname(fileURLToPath(import.meta.url));
 async function main() {
   const db = new DatabaseService();
   try {
@@ -25,6 +27,20 @@ async function main() {
             )
             .sort();
           for (const name of files) {
+            if (
+              name === "006_recipe_catalog.sql" ||
+              name === "007_image_urls.sql"
+            ) {
+              const products = await client.query(
+                "SELECT EXISTS (SELECT 1 FROM products) AS has_products",
+              );
+              if (!products.rows[0].has_products) {
+                console.log(
+                  `Tạm hoãn ${name}: chưa có sản phẩm. Chạy db:seed rồi db:migrate lại.`,
+                );
+                continue;
+              }
+            }
             const sql = readFileSync(resolve(directory, name), "utf8");
             const checksum = createHash("sha256").update(sql).digest("hex");
             const current = await client.query(

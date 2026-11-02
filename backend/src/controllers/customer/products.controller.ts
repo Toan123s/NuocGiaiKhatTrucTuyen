@@ -1,13 +1,13 @@
-import { CUSTOMER_ROUTES } from "../../routes/customer.routes";
+import { CUSTOMER_ROUTES } from "../../routes/customer.routes.js";
 // TV1 — GET /products đã chạy; detail để TODO theo phạm vi bộ khung.
 import {
+  BadRequestException,
   Inject,
   Controller,
   Get,
   Param,
-  NotImplementedException,
 } from "@nestjs/common";
-import { ProductsService } from "../../services/products.service";
+import { ProductsService } from "../../services/products.service.js";
 @Controller(CUSTOMER_ROUTES.products.base)
 export class ProductsController {
   constructor(
@@ -16,10 +16,11 @@ export class ProductsController {
   @Get(CUSTOMER_ROUTES.products.list) getProducts() {
     return this.service.getProducts();
   }
-  @Get(CUSTOMER_ROUTES.products.detail) getProductDetail(
-    @Param("id") _id: string,
-  ): never {
-    // TODO TV1: validate id, service.getProductDetail → model.findById; 404 nếu không có.
-    throw new NotImplementedException("Chi tiết sản phẩm chưa triển khai");
+  @Get(CUSTOMER_ROUTES.products.detail)
+  getProductDetail(@Param("id") id: string) {
+    if (!id.trim()) {
+      throw new BadRequestException("Thiếu mã sản phẩm.");
+    }
+    return this.service.getProductDetail(id);
   }
 }
