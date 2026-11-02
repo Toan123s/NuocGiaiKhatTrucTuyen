@@ -10,8 +10,10 @@ import {
 } from "@nestjs/common";
 import { OrderModel } from "../src/models/order.model";
 import { InventoryModel } from "../src/models/inventory.model";
+import { PromotionModel } from "../src/models/promotion.model";
 import { InventoryService } from "../src/services/inventory.service";
 import { OrdersService } from "../src/services/orders.service";
+import { PromotionsService } from "../src/services/promotions.service";
 import type { CreateOrderInput } from "../src/types/contracts";
 import {
   EXTRA_M,
@@ -38,7 +40,15 @@ before(async () => {
   db = await createTestDb();
   tx = makeTx(db);
   inventory = new InventoryService(new InventoryModel());
-  service = new OrdersService(makeFakeDatabase(db), new OrderModel(), inventory);
+  const promotions = new PromotionsService({
+    findByCode: async () => null,
+  } as PromotionModel);
+  service = new OrdersService(
+    makeFakeDatabase(db),
+    new OrderModel(),
+    inventory,
+    promotions,
+  );
 });
 after(async () => {
   await db.close();

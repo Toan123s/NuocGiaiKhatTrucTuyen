@@ -10,8 +10,8 @@
 | Trang Đơn của tôi, Chi tiết đơn, Kết quả thanh toán | Xong | `frontend/src/views/customer/orders/`, `.../payment-status/` |
 | Frontend gửi token đăng nhập khi gọi `/orders/*` | Xong (đọc phiên của TV3) | `frontend/src/lib/client-api.ts` |
 | Smoke test sau deploy | Xong | `scripts/smoke.mjs`, chạy bằng `node scripts/smoke.mjs` |
-| Nút hủy đơn gọi API TV4 | Chờ TV4 bỏ 501 ở `POST /orders/:id/cancel` | `OrderDetailView.tsx` |
-| E2E toàn luồng (menu → giỏ → đăng nhập → thanh toán → PAID) | Chưa làm được: chờ TV2/TV4/TV5 hoàn thiện đặt đơn và thanh toán | `tests/e2e/checkout.spec.todo.ts` |
+| Nút hủy đơn gọi API TV4 | Đã nối `POST /orders/:id/cancel`; cần E2E xác minh trên môi trường chạy thật | `OrderDetailView.tsx` |
+| E2E toàn luồng (menu → giỏ → đăng nhập → thanh toán → PAID) | Chưa làm được: thanh toán TV5 vẫn là khung 501 | `tests/e2e/checkout.spec.todo.ts` |
 | Workflow CD (image, registry, deploy, rollback) | Chưa làm: nhóm chưa chốt nơi hosting | xem mục 3 |
 
 ## 2. Smoke test sau deploy
