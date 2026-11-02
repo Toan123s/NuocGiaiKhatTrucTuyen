@@ -4,8 +4,8 @@
 // Thứ tự khai báo QUAN TRỌNG: "me" phải đứng trước ":id", nếu không "me" bị hiểu là mã đơn.
 // CustomerOrdersController phải đứng trước OrdersController (TV4) trong app.module.ts (hiện đã đúng).
 //
-// Class gắn @UseGuards(JwtAuthGuard) của TV3: guard xác minh JWT rồi gán request.user = { id, email }.
-// Thiếu/sai/hết hạn token => guard ném 401. currentUserId() vẫn ném 401 nếu vì lý do nào đó chưa có user => API đóng.
+// TV3: JwtAuthGuard (guards/jwt-auth.guard.ts) áp cho cả class: xác minh JWT rồi gán request.user = { id, email }.
+// currentUserId() giữ lại làm lớp phòng thủ thứ hai: thiếu user thì ném 401, không bao giờ trả dữ liệu của ai.
 import {
   Controller,
   Get,
@@ -34,8 +34,9 @@ function currentUserId(req: AuthenticatedRequest): string {
   return id;
 }
 
-@UseGuards(JwtAuthGuard)
+
 @Controller(CUSTOMER_ROUTES.orders.base)
+@UseGuards(JwtAuthGuard)
 export class CustomerOrdersController {
   constructor(
     @Inject(CustomerOrdersService)

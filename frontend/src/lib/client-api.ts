@@ -1,7 +1,7 @@
 // TV6 — Gọi backend TỪ TRÌNH DUYỆT (lib/api.ts hiện chỉ dùng phía server). Không viết SQL/secret ở đây.
-// Mọi request đi qua request(): TV3 chỉ cần sửa getAccessToken() khi chốt cách lưu phiên.
-import type { OrderDetail, OrderListPage } from "@/types/customer-order";
-import { loadSession } from "@/features/auth/session";
+// Mọi request đi qua request(). Token lấy từ phiên đăng nhập của TV3 (getAccessToken).
+import type { OrderDetail,OrderListPage} from "@/types/customer-order";
+import { clearSession, loadSession } from "@/features/auth/session";
 
 // Cần cấu hình khi build production (Docker/CD): NEXT_PUBLIC_API_BASE_URL=https://<api>.
 const API_BASE = (
@@ -18,8 +18,8 @@ export class ApiError extends Error {
   }
 }
 
-// Lấy token từ phiên TV3 lưu trong localStorage (key "brewlite.session").
-// loadSession() tự bỏ qua phiên sai hình dạng/hết hạn và trả null khi chạy phía server.
+// TV3: JWT lấy từ phiên đăng nhập (localStorage, key brewlite.session, xem features/auth/session.ts).
+// Chưa đăng nhập hoặc phiên đã quá hạn → null → backend trả 401 → UI hiện lời nhắc đăng nhập.
 function getAccessToken(): string | null {
   return loadSession()?.accessToken ?? null;
 }
@@ -32,8 +32,7 @@ function messageFromBody(body: unknown): string | null {
   if (typeof body !== "object" || body === null) return null;
   const message = (body as { message?: unknown }).message;
   if (typeof message === "string") return message;
-  if (Array.isArray(message))
-    return message.filter((m) => typeof m === "string").join(", ");
+  if (Array.isArray(message)) return message.filter((m) => typeof m === "string").join(", ");
   return null;
 }
 
@@ -61,10 +60,11 @@ async function request<T>(path: string, init: RequestInit = {}): Promise<T> {
     try {
       body = JSON.parse(text);
     } catch {
-      if (response.ok)
-        throw new ApiError(502, "Phản hồi từ máy chủ không hợp lệ");
+      if (response.ok) throw new ApiError(502, "Phản hồi từ máy chủ không hợp lệ");
     }
   }
+  // Server từ chối token (hết hạn/không hợp lệ): xóa phiên để header và trang khớp nhau về trạng thái đăng nhập.
+  if (response.status === 401 && token) clearSession();
   if (!response.ok) {
     throw new ApiError(
       response.status,
@@ -92,20 +92,6 @@ export function fetchOrderDetail(
   });
 }
 
-export function reconcilePayment(paymentId: string): Promise<unknown> {
-  return request<unknown>(
-    `/payments/${encodeURIComponent(paymentId)}/reconcile`,
-    { method: "POST" },
-  );
-}
-
-export function retryOrderPayment(orderId: string): Promise<unknown> {
-  return request<unknown>(
-    `/orders/${encodeURIComponent(orderId)}/retry-payment`,
-    { method: "POST" },
-  );
-}
-
 // API của TV4; hiện có thể trả 501. UI luôn tải lại trạng thái thật sau khi gọi.
 export function cancelOrder(orderId: string): Promise<unknown> {
   return request<unknown>(`/orders/${encodeURIComponent(orderId)}/cancel`, {
@@ -116,11 +102,9 @@ export function cancelOrder(orderId: string): Promise<unknown> {
 /** Thông báo thân thiện cho người dùng; không lộ chi tiết lỗi máy chủ. */
 export function describeError(error: unknown): string {
   if (error instanceof ApiError) {
-    if (error.status === 0)
-      return "Không kết nối được máy chủ. Kiểm tra mạng rồi thử lại.";
+    if (error.status === 0) return "Không kết nối được máy chủ. Kiểm tra mạng rồi thử lại.";
     if (error.status === 501) return "Chức năng này chưa sẵn sàng.";
-    if (error.status >= 500)
-      return "Máy chủ đang gặp sự cố, vui lòng thử lại sau.";
+    if (error.status >= 500) return "Máy chủ đang gặp sự cố, vui lòng thử lại sau.";
     return error.message;
   }
   return "Có lỗi xảy ra, vui lòng thử lại.";
