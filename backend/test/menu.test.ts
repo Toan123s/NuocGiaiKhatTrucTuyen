@@ -54,15 +54,13 @@ test("health không giả vờ đã kiểm tra DB trong sample mode", async () =
     database: "not-checked",
   });
 });
-test("API còn khung trả 501, không nhận thanh toán giả", async () => {
-  for (const [path, method] of [
-    ["/orders", "POST"],
-    ["/payments", "POST"],
-    ["/products/abc", "GET"],
-  ]) {
-    const response = await fetch(`${origin}${path}`, { method });
-    assert.equal(response.status, 501, path);
-  }
+test("API bảo vệ đơn hàng và chưa nhận thanh toán giả", async () => {
+  const ordersResponse = await fetch(`${origin}/orders`, { method: "POST" });
+  assert.equal(ordersResponse.status, 401);
+  const paymentsResponse = await fetch(`${origin}/payments`, { method: "POST" });
+  assert.equal(paymentsResponse.status, 501);
+  const productResponse = await fetch(`${origin}/products/abc`);
+  assert.equal(productResponse.status, 404);
 });
 function postJson(path: string, body: unknown) {
   return fetch(`${origin}${path}`, {

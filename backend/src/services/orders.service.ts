@@ -11,6 +11,7 @@ import {
 import { DatabaseService } from "../config/db";
 import { OrderModel } from "../models/order.model";
 import { InventoryService } from "./inventory.service";
+import { PromotionsService } from "./promotions.service";
 import { calculateUnitPrice } from "./order-pricing";
 import type { CreateOrderInput } from "../types/contracts";
 import type { NewOrderItem } from "../types/order.types";
@@ -21,6 +22,7 @@ export class OrdersService {
     private readonly db: DatabaseService,
     private readonly orderModel: OrderModel,
     private readonly inventoryService: InventoryService,
+    private readonly promotionsService: PromotionsService,
   ) { }
 
   // TODO TV4: previewOrder (xem giá tạm, không ghi DB). Chưa có route riêng; thống nhất request/response với TV1 và TV2 trước.
@@ -28,7 +30,7 @@ export class OrdersService {
     throw new NotImplementedException("TV4: previewOrder chưa triển khai");
   }
 
-  // Tạo đơn PENDING + chi tiết + giữ tồn trong một transaction. Khuyến mãi (TV1) chưa nối: discount = 0.
+  // Tạo đơn PENDING + chi tiết + giữ tồn trong một transaction.
   async createOrder(userId: string, input: CreateOrderInput) {
     if (!input.items || input.items.length === 0) {
       throw new BadRequestException("Đơn hàng phải có ít nhất một món");
@@ -67,7 +69,20 @@ export class OrdersService {
 
       // Bước 3: tổng tiền
       const subtotal = orderItems.reduce((sum, item) => sum + item.lineTotal, 0);
-      const discount = 0;
+      const promotion = input.promotionCode
+        ? await this.promotionsService.validatePromotion(
+            input.promotionCode,
+            subtotal,
+          )
+        : null;
+      const discount = promotion
+        ? Math.min(
+            promotion.type === "PERCENT"
+              ? Math.floor((subtotal * promotion.value) / 100)
+              : promotion.value,
+            subtotal,
+          )
+        : 0;
       const total = subtotal - discount;
 
       // Bước 4: giữ tồn (ném lỗi nếu hết hàng, withTransaction sẽ rollback)
@@ -75,7 +90,14 @@ export class OrdersService {
 
       // Bước 5: ghi đơn rồi ghi chi tiết, cùng một client
       const order = await this.orderModel.insertOrder(
-        { id: orderId, userId, subtotal, discount, total, promotionId: null },
+        {
+          id: orderId,
+          userId,
+          subtotal,
+          discount,
+          total,
+          promotionId: promotion?.id ?? null,
+        },
         client,
       );
       await this.orderModel.insertOrderItems(order.id, orderItems, client);

@@ -6,7 +6,7 @@ Phân công hiện hành đã cân lại: TV1 nhận khuyến mãi và Docker lo
 
 Đã có menu/tìm kiếm/lọc, API danh sách sản phẩm, khung ảnh và cách gắn imageUrl. Database 001/002/003 đã có schema, kiểm tra và dữ liệu mẫu; runner migrate/seed, 16 test, health và CI typecheck/test/build đã có. Đây không phải công việc cần viết lại từ đầu.
 
-Chi tiết món, Auth, Cart, Checkout, Payment và lịch sử/kết quả vẫn là khung TODO. PromotionInput mới là file khung chưa gắn vào trang. Docker hiện chỉ chạy DB; Docker web/API, lint/required checks, CD và E2E nghiệp vụ cần hoàn thiện. Không có trang Admin/nhân viên.
+Auth, Cart, Checkout và lịch sử/chi tiết đơn đã có luồng chính; Payment vẫn là khung TODO. PromotionInput đã được gắn vào Checkout nhưng backend mới xác nhận mã khi tạo đơn. Docker hiện chỉ chạy DB; Docker web/API, lint/required checks, CD và E2E nghiệp vụ cần hoàn thiện. Không có trang Admin/nhân viên.
 
 Các đường dẫn frontend rút gọn `views/`, `features/`, `components/`, `app/` tính từ `frontend/src/`; backend rút gọn `services/`, `models/`, `controllers/`, `routes/`, `config/` tính từ `backend/src/`. Các file Docker, README và workflows dùng đường dẫn từ gốc repo.
 
