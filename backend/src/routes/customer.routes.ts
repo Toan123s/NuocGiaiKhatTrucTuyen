@@ -10,4 +10,5 @@ export const CUSTOMER_ROUTES = {
     cancel: ":id/cancel",
   },
   payments: { base: "payments", create: "", status: ":id" },
+  promotions: { base: "promotions", validate: "validate" },
 } as const;

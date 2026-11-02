@@ -7,6 +7,7 @@ import { HealthController } from "./controllers/system/health.controller";
 import { AuthController } from "./controllers/auth/auth.controller";
 import { OrdersController } from "./controllers/customer/orders.controller";
 import { PaymentsController } from "./controllers/customer/payments.controller";
+import { PromotionsController } from "./controllers/customer/promotions.controller";
 import { CustomerOrdersController } from "./controllers/customer/customer-orders.controller";
 
 import { ProductsService } from "./services/products.service";
@@ -36,6 +37,7 @@ import { SepayService } from "./sepay/sepay.services";
     CustomerOrdersController,
     OrdersController,
     PaymentsController,
+    PromotionsController,
     SepayController,
   ],
   providers: [

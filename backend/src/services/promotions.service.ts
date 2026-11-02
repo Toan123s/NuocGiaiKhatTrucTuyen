@@ -52,4 +52,15 @@ export class PromotionsService {
 
     return Math.min(discount, subtotal);
   }
+
+  async previewPromotion(code: string, subtotal: number) {
+    const normalizedCode = code.trim().toUpperCase();
+    const discount = await this.calculateDiscount(normalizedCode, subtotal);
+    return {
+      code: normalizedCode,
+      subtotal,
+      discount,
+      total: subtotal - discount,
+    };
+  }
 }
