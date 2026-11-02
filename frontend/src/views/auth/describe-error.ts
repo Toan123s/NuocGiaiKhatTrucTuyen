@@ -10,7 +10,8 @@ export function describeAuthError(error: unknown): DescribedError {
   if (error instanceof ApiError) {
     const fields: FieldErrors = {};
     if (error.fieldErrors?.email) fields.email = error.fieldErrors.email;
-    if (error.fieldErrors?.password) fields.password = error.fieldErrors.password;
+    if (error.fieldErrors?.password)
+      fields.password = error.fieldErrors.password;
     if (fields.email || fields.password) return { fields };
     return { form: error.message };
   }

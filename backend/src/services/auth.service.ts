@@ -23,7 +23,7 @@ import type {
 } from "../types/auth.types";
 import { parseLoginInput, parseRegisterInput } from "./auth-validation";
 import { UsersService } from "./users.service";
-const BCRYPT_ROUNDS = 10;
+export const BCRYPT_ROUNDS = 10;
 // Dùng chung một thông báo cho "sai email" và "sai mật khẩu" để không lộ email nào đã đăng ký.
 const INVALID_CREDENTIALS_MESSAGE = "Email hoặc mật khẩu không đúng.";
 function unauthorized(code: AuthErrorCode, message: string) {

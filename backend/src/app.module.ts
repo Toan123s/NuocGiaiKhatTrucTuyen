@@ -9,11 +9,29 @@ import { AuthController } from "./controllers/auth/auth.controller";
 import { OrdersController } from "./controllers/customer/orders.controller";
 import { PaymentsController } from "./controllers/customer/payments.controller";
 import { CustomerOrdersController } from "./controllers/customer/customer-orders.controller";
+import { CustomerOrderModel } from "./models/customer-order.model";
+import { OrderStateService } from "./services/order-state.service";
+import { CustomerOrdersService } from "./services/customer-orders.service";
 
 import { ProductsService } from "./services/products.service";
 import { OrdersService } from "./services/orders.service";
 import { UsersService } from "./services/users.service";
 import { AuthService } from "./services/auth.service";
+import { PasswordResetService } from "./services/password-reset.service";
+import { Mailer, createMailer } from "./services/mailer";
+import { PromotionsService } from "./services/promotions.service";
+import { InventoryService } from "./services/inventory.service";
+
+import { ProductModel } from "./models/product.model";
+import { UserModel } from "./models/user.model";
+import { OrderModel } from "./models/order.model";
+import { PromotionModel } from "./models/promotion.model";
+import { InventoryModel } from "./models/inventory.model";
+
+import { SepayController } from "./sepay/sepay.controller";
+import { SepayModel } from "./sepay/sepay.model";
+import { SepayService } from "./sepay/sepay.services";
+
 @Module({
   controllers: [
     ProductsController,
@@ -22,6 +40,7 @@ import { AuthService } from "./services/auth.service";
     CustomerOrdersController,
     OrdersController,
     PaymentsController,
+    SepayController,
   ],
   providers: [
     DatabaseService,
@@ -30,6 +49,8 @@ import { AuthService } from "./services/auth.service";
     UserModel,
     UsersService,
     AuthService,
+    PasswordResetService,
+    { provide: Mailer, useFactory: () => createMailer() },
     OrderModel,
     OrdersService,
     PromotionModel,
@@ -38,6 +59,9 @@ import { AuthService } from "./services/auth.service";
     InventoryService,
     SepayModel,
     SepayService,
-  ],
+    OrderStateService,
+    CustomerOrdersService,
+   CustomerOrderModel,
+  ]
 })
 export class AppModule {}

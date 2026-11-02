@@ -80,6 +80,17 @@
   opacity: 0.65;
   cursor: progress;
 }
+.forgot {
+  margin: -8px 0 0;
+  font-size: 14px;
+  text-align: right;
+}
+.forgot a {
+  color: var(--green);
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
 .switch {
   margin: 24px 0 0;
   color: var(--muted);

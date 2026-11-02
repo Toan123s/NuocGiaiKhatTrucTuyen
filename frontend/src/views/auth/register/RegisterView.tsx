@@ -28,9 +28,12 @@ export function RegisterView() {
     setReturnUrl(new URLSearchParams(window.location.search).get("returnUrl"));
   }, []);
   const target = safeReturnUrl(returnUrl);
-  const returnQuery = target === "/" ? "" : `&returnUrl=${encodeURIComponent(target)}`;
+  const returnQuery =
+    target === "/" ? "" : `&returnUrl=${encodeURIComponent(target)}`;
   const loginHref =
-    target === "/" ? "/login" : `/login?returnUrl=${encodeURIComponent(target)}`;
+    target === "/"
+      ? "/login"
+      : `/login?returnUrl=${encodeURIComponent(target)}`;
   function focusFirstInvalid(found: FieldErrors) {
     const first = (["email", "password", "confirmPassword"] as const).find(
       (key) => found[key],

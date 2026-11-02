@@ -30,12 +30,30 @@ export class UsersService {
           throw new ConflictException({
             statusCode: 409,
             code: "EMAIL_TAKEN",
-            message: "Email này đã được đăng ký. Hãy đăng nhập hoặc dùng email khác.",
+            message:
+              "Email này đã được đăng ký. Hãy đăng nhập hoặc dùng email khác.",
             errors: { email: "Email này đã được đăng ký." },
           });
         throw error;
       }
     });
+  }
+  createPasswordResetToken(
+    userId: string,
+    tokenHash: string,
+    ttlSeconds: number,
+  ): Promise<boolean> {
+    return this.run(() =>
+      this.model.createPasswordResetToken(userId, tokenHash, ttlSeconds),
+    );
+  }
+  resetPasswordWithToken(
+    tokenHash: string,
+    passwordHash: string,
+  ): Promise<boolean> {
+    return this.run(() =>
+      this.model.resetPasswordWithToken(tokenHash, passwordHash),
+    );
   }
   // Trang tài khoản/GET /auth/me: chỉ đọc user từ id trong JWT đã xác thực.
   async getCurrentUser(userId: string): Promise<PublicUser> {

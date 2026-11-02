@@ -14,9 +14,9 @@ import styles from "../auth.module.css";
 const NOTICES: Record<string, string> = {
   expired:
     "Phiên đăng nhập đã hết hạn. Đăng nhập lại để tiếp tục, giỏ hàng của bạn vẫn còn nguyên.",
-  required:
-    "Đăng nhập để tiếp tục đặt món. Giỏ hàng của bạn vẫn còn nguyên.",
+  required: "Đăng nhập để tiếp tục đặt món. Giỏ hàng của bạn vẫn còn nguyên.",
   registered: "Tài khoản đã sẵn sàng. Đăng nhập để tiếp tục.",
+  "password-reset": "Mật khẩu đã được đặt lại. Đăng nhập bằng mật khẩu mới.",
 };
 export function LoginView() {
   const router = useRouter();
@@ -35,7 +35,9 @@ export function LoginView() {
   }, []);
   const target = safeReturnUrl(returnUrl);
   const registerHref =
-    target === "/" ? "/register" : `/register?returnUrl=${encodeURIComponent(target)}`;
+    target === "/"
+      ? "/register"
+      : `/register?returnUrl=${encodeURIComponent(target)}`;
   function focusFirstInvalid(found: FieldErrors) {
     const first = (["email", "password"] as const).find((key) => found[key]);
     if (first) document.getElementById(`login-${first}`)?.focus();
@@ -95,6 +97,9 @@ export function LoginView() {
           error={errors.password}
           disabled={submitting}
         />
+        <p className={styles.forgot}>
+          <Link href="/forgot-password">Quên mật khẩu?</Link>
+        </p>
         <button
           type="submit"
           className={`primary-button ${styles.submit}`}

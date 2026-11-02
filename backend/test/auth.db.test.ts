@@ -45,7 +45,10 @@ test("tài khoản seed đăng nhập được bằng mật khẩu demo và toke
     await pglite.query<{ email: string }>("SELECT email FROM users LIMIT 1")
   ).rows[0];
   assert.ok(row);
-  const session = await auth.login({ email: row.email, password: "BrewLite123!" });
+  const session = await auth.login({
+    email: row.email,
+    password: "BrewLite123!",
+  });
   const identity = auth.verifyAccessToken(session.accessToken);
   assert.equal(identity.email.toLowerCase(), row.email.toLowerCase());
   const me = await users.getCurrentUser(identity.id);
@@ -59,7 +62,11 @@ test("đăng ký ghi đúng vào bảng users: hash bcrypt, 0 điểm, email ch�
   assert.equal(created.email, email);
   assert.equal(created.loyaltyPoints, 0);
   const stored = (
-    await pglite.query<{ password_hash: string; display_name: string; loyalty_points: number }>(
+    await pglite.query<{
+      password_hash: string;
+      display_name: string;
+      loyalty_points: number;
+    }>(
       "SELECT password_hash, display_name, loyalty_points FROM users WHERE id = $1",
       [created.id],
     )
@@ -68,13 +75,22 @@ test("đăng ký ghi đúng vào bảng users: hash bcrypt, 0 điểm, email ch�
   assert.match(stored.password_hash, /^\$2[aby]\$/);
   assert.equal(Number(stored.loyalty_points), 0);
   assert.ok(stored.display_name.length > 0);
-  const session = await auth.login({ email: email.toUpperCase(), password: "Mat-khau-moi-1" });
+  const session = await auth.login({
+    email: email.toUpperCase(),
+    password: "Mat-khau-moi-1",
+  });
   assert.equal(session.user.id, created.id);
 });
 test("đăng ký trùng email khác hoa thường bị DB chặn và trả 409", async () => {
-  await auth.register({ email: "trung.email@example.com", password: "Mat-khau-moi-1" });
+  await auth.register({
+    email: "trung.email@example.com",
+    password: "Mat-khau-moi-1",
+  });
   await assert.rejects(
-    auth.register({ email: "TRUNG.EMAIL@example.com", password: "Mat-khau-moi-1" }),
+    auth.register({
+      email: "TRUNG.EMAIL@example.com",
+      password: "Mat-khau-moi-1",
+    }),
     (error: unknown) => {
       assert.ok(error instanceof HttpException);
       assert.equal(error.getStatus(), 409);
