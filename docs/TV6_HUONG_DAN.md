@@ -10,8 +10,8 @@
 | Trang Đơn của tôi, Chi tiết đơn, Kết quả thanh toán | Xong | `frontend/src/views/customer/orders/`, `.../payment-status/` |
 | Frontend gửi token đăng nhập khi gọi `/orders/*` | Xong (đọc phiên của TV3) | `frontend/src/lib/client-api.ts` |
 | Smoke test sau deploy | Xong | `scripts/smoke.mjs`, chạy bằng `node scripts/smoke.mjs` |
-| Nút hủy đơn gọi API TV4 | Chờ TV4 bỏ 501 ở `POST /orders/:id/cancel` | `OrderDetailView.tsx` |
-| E2E toàn luồng (menu → giỏ → đăng nhập → thanh toán → PAID) | Chưa làm được: chờ TV2/TV4/TV5 hoàn thiện đặt đơn và thanh toán | `tests/e2e/checkout.spec.todo.ts` |
+| Nút hủy đơn gọi API TV4 | Đã nối `POST /orders/:id/cancel`; cần E2E xác minh trên môi trường chạy thật | `OrderDetailView.tsx` |
+| E2E toàn luồng (menu → giỏ → đăng nhập → thanh toán → PAID) | Chưa làm được: trang `/payment` và API `/payments` của TV5 vẫn là khung (501); mới có webhook SePay | `tests/e2e/checkout.spec.todo.ts` |
 | Workflow CD (image, registry, deploy, rollback) | Chưa làm: nhóm chưa chốt nơi hosting | xem mục 3 |
 
 ## 2. Smoke test sau deploy
@@ -59,3 +59,15 @@ Khi nhóm chốt hosting, workflow CD nên có thứ tự: build image từ Dock
 ## 5. Kiểm tra quyền sở hữu và chuyển trạng thái
 
 Đã có test trong `backend/test/customer-orders.test.ts` và `customer-orders.sql.test.ts` (quy tắc trạng thái, đọc đơn theo user, SQL thật trên PGlite). Chạy bằng `npm test` ở thư mục gốc.
+
+## 6. Trang kết quả thanh toán với luồng SePay
+
+Hiện thanh toán thật chỉ có webhook SePay (`POST /webhooks/sepay`): khi tiền về, backend tạo payment `SUCCEEDED`, đổi đơn sang `PAID` và ghi điểm trong một transaction. Trước lúc đó đơn vẫn `PENDING` và chưa có dòng payment nào, nên trang `/payment-status` coi đó là "đang chờ" và tiếp tục polling `GET /orders/:id` (tối đa 60 giây, 2 giây một lần) thay vì báo ngay "chưa thanh toán". Hết 60 giây thì hiện nút "Kiểm tra lại"; không tự kết luận thất bại.
+
+Thử local khi chưa có trang `/payment` của TV5: tạo đơn qua giao diện, mở `/payment-status?orderId=<mã đơn đầy đủ>`, rồi ở terminal khác chạy:
+
+```sh
+SEPAY_WEBHOOK_API_KEY=<giá trị trong .env của API> node scripts/simulate-sepay.mjs <mã đơn đầy đủ> <tổng tiền>
+```
+
+Tổng tiền phải đúng bằng tổng đơn, nếu không webhook trả 400. Script chỉ chạy với API trên localhost.

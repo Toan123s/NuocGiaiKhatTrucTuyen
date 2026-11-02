@@ -1,6 +1,7 @@
 "use client";
 // TV6 — pollPaymentStatus / stopPolling / checkPaymentStatus gom thành một hook.
 // Đọc đơn từ GET /orders/:id (backend TV6, đã kèm các lần thanh toán + trạng thái đơn) nên không tin status trên URL.
+// Tiếp tục hỏi khi attempt đang PROCESSING HOẶC đơn còn PENDING chưa có giao dịch (chờ webhook SePay báo tiền về).
 // Dừng khi có kết quả cuối, khi hết thời gian chờ, hoặc khi component unmount.
 import { useEffect, useState } from "react";
 import {
@@ -12,6 +13,7 @@ import {
 } from "@/lib/client-api";
 import {
   derivePaymentOutcome,
+  isStillWaiting,
   type PaymentOutcome,
 } from "@/features/orders/order-format";
 import type { OrderDetail } from "@/types/customer-order";
@@ -26,7 +28,7 @@ export type PaymentOutcomeState =
       kind: "ready";
       order: OrderDetail;
       outcome: PaymentOutcome;
-      /** true khi hết thời gian chờ mà vẫn PROCESSING: đơn/tồn vẫn được giữ, chờ đối soát. */
+      /** true khi hết thời gian chờ mà vẫn PROCESSING / chưa thấy tiền: đơn/tồn vẫn được giữ, khách bấm kiểm tra lại. */
       timedOut: boolean;
     }
   | LoadFailure;
@@ -48,7 +50,7 @@ export function usePaymentOutcome(orderId: string | null) {
         if (controller.signal.aborted) return;
         failures = 0;
         const outcome = derivePaymentOutcome(order);
-        if (outcome !== "PROCESSING") {
+        if (!isStillWaiting(outcome)) {
           setState({ kind: "ready", order, outcome, timedOut: false });
           return; // kết quả cuối: dừng polling
         }
