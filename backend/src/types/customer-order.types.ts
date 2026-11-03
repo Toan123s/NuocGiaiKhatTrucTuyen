@@ -1,6 +1,6 @@
 // TV6 — Kiểu dữ liệu cho API đọc đơn của khách (GET /orders/me, GET /orders/:id).
 // Không viết SQL ở đây. Frontend copy/đồng bộ sang frontend/src/types khi đổi response.
-import type { OrderStatus } from "./contracts";
+import type { OrderStatus } from "./contracts.js";
 
 export type PaymentAttemptStatus = "PROCESSING" | "SUCCEEDED" | "FAILED";
 export type PaymentMethod = "WALLET" | "CARD";

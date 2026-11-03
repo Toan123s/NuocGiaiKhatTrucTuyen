@@ -7,12 +7,8 @@ import type {
   OrderRecord,
   OrderRow,
   ProductPricing,
-} from "../types/order.types";
-import type {
-  PoolClient,
-  OrderStatus,
-  OrderLine,
-} from "../types/contracts";
+} from "../types/order.types.js";
+import type { PoolClient, OrderStatus, OrderLine } from "../types/contracts.js";
 
 @Injectable()
 export class OrderModel {

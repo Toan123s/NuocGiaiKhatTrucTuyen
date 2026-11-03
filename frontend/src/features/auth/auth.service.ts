@@ -1,10 +1,6 @@
 // TV3 — Gắn /login, /register vào API NestJS (POST /auth/register, POST /auth/login) và quản lý phiên phía trình duyệt.
 // TV2/TV5/TV6 gọi API cần đăng nhập qua authorizedRequest() ở cuối file: tự gắn Bearer token và xử lý 401.
-import {
-  apiRequest,
-  ApiError,
-  type RequestOptions,
-} from "@/lib/api-client";
+import { apiRequest, ApiError, type RequestOptions } from "@/lib/api-client";
 import type { AuthSession, PublicUser } from "@/types/auth";
 import { safeReturnUrl } from "./return-url";
 import {
@@ -62,7 +58,10 @@ export async function authorizedRequest<T>(
     throw new ApiError("Cần đăng nhập để tiếp tục.", 401, "TOKEN_MISSING");
   }
   try {
-    return await apiRequest<T>(path, { ...options, token: session.accessToken });
+    return await apiRequest<T>(path, {
+      ...options,
+      token: session.accessToken,
+    });
   } catch (error) {
     if (error instanceof ApiError && error.status === 401)
       authClient.handleSessionExpired("expired");

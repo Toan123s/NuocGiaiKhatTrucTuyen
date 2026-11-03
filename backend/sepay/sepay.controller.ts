@@ -1,1 +1,1 @@
-export { SepayController } from "../src/sepay/sepay.controller";
+export { SepayController } from "../src/sepay/sepay.controller.js";

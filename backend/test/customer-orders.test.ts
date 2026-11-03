@@ -9,11 +9,11 @@ import {
   type INestApplication,
 } from "@nestjs/common";
 import { NestFactory } from "@nestjs/core";
-import { AppModule } from "../src/app.module";
-import { OrderStateService } from "../src/services/order-state.service";
-import { CustomerOrdersService } from "../src/services/customer-orders.service";
-import type { CustomerOrderModel } from "../src/models/customer-order.model";
-import type { OrderStatus } from "../src/types/contracts";
+import { AppModule } from "../src/app.module.js";
+import { OrderStateService } from "../src/services/order-state.service.js";
+import { CustomerOrdersService } from "../src/services/customer-orders.service.js";
+import type { CustomerOrderModel } from "../src/models/customer-order.model.js";
+import type { OrderStatus } from "../src/types/contracts.js";
 
 const ALL: OrderStatus[] = [
   "PENDING",
@@ -105,7 +105,11 @@ test("transitionOrder: thành công trả trạng thái cũ", async () => {
 test("transitionOrder: không có đơn → 404; sai cạnh → 409 và không UPDATE; CAS thua → 409", async () => {
   const missing = fakeStateModel(undefined);
   await assert.rejects(
-    new OrderStateService(missing.model).transitionOrder({} as never, "x", "PAID"),
+    new OrderStateService(missing.model).transitionOrder(
+      {} as never,
+      "x",
+      "PAID",
+    ),
     NotFoundException,
   );
   const invalid = fakeStateModel("PAID");
@@ -120,7 +124,11 @@ test("transitionOrder: không có đơn → 404; sai cạnh → 409 và không U
   assert.deepEqual(invalid.updates, []);
   const raced = fakeStateModel("PENDING", false);
   await assert.rejects(
-    new OrderStateService(raced.model).transitionOrder({} as never, "o1", "PAID"),
+    new OrderStateService(raced.model).transitionOrder(
+      {} as never,
+      "o1",
+      "PAID",
+    ),
     ConflictException,
   );
 });
@@ -165,9 +173,16 @@ test("getMyOrders: limit/offset sai → 400, mặc định limit 20", async () =
     },
   } as Partial<CustomerOrderModel>);
   for (const bad of ["0", "51", "abc", "1.5", "-1"]) {
-    await assert.rejects(service.getMyOrders("u1", bad), BadRequestException, bad);
+    await assert.rejects(
+      service.getMyOrders("u1", bad),
+      BadRequestException,
+      bad,
+    );
   }
-  await assert.rejects(service.getMyOrders("u1", "5", "-1"), BadRequestException);
+  await assert.rejects(
+    service.getMyOrders("u1", "5", "-1"),
+    BadRequestException,
+  );
   await service.getMyOrders("u1");
   assert.deepEqual(calls, [["u1", 21, 0]]);
 });
@@ -194,7 +209,10 @@ test("getOrderDetail: 404 khi không thuộc user, 400 khi mã rỗng, canCancel
       id === "o1" && userId === "u1" ? detailRow : undefined,
   } as Partial<CustomerOrderModel>);
   await assert.rejects(service.getOrderDetail("u2", "o1"), NotFoundException);
-  await assert.rejects(service.getOrderDetail("u1", "   "), BadRequestException);
+  await assert.rejects(
+    service.getOrderDetail("u1", "   "),
+    BadRequestException,
+  );
   const detail = await service.getOrderDetail("u1", "o1");
   assert.equal(detail.canCancel, false);
   assert.equal(detail.canRetryPayment, false);

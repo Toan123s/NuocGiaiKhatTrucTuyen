@@ -1,6 +1,6 @@
 // TV3 — Pool/env và transaction helper dùng chung. TV1/TV4/TV5/TV6 gọi qua model; không viết SQL nghiệp vụ trong controller/view.
 // TV1 phối hợp cấu hình DB trong Docker local; TV6 cấu hình kết nối production, không đổi contract transaction khi chưa thống nhất nhóm.
-import "./environment";
+import "./environment.js";
 import { Injectable, OnModuleDestroy } from "@nestjs/common";
 import { Pool, PoolClient, QueryResultRow } from "pg";
 @Injectable()

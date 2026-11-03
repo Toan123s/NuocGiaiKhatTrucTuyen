@@ -9,13 +9,13 @@ import {
 import {
   CustomerOrderModel,
   type OrderSummaryRow,
-} from "../models/customer-order.model";
-import { OrderStateService } from "./order-state.service";
+} from "../models/customer-order.model.js";
+import { OrderStateService } from "./order-state.service.js";
 import type {
   OrderDetail,
   OrderListPage,
   OrderSummary,
-} from "../types/customer-order.types";
+} from "../types/customer-order.types.js";
 
 const DEFAULT_LIMIT = 20;
 const MAX_LIMIT = 50;
@@ -35,7 +35,9 @@ function parseIntParam(
   if (raw === undefined || raw === "") return fallback;
   const n = typeof raw === "string" ? Number(raw) : NaN;
   if (!Number.isInteger(n) || n < min || n > max) {
-    throw new BadRequestException(`${name} phải là số nguyên từ ${min} đến ${max}`);
+    throw new BadRequestException(
+      `${name} phải là số nguyên từ ${min} đến ${max}`,
+    );
   }
   return n;
 }
@@ -70,7 +72,11 @@ export class CustomerOrdersService {
     const limit = parseIntParam(rawLimit, "limit", DEFAULT_LIMIT, 1, MAX_LIMIT);
     const offset = parseIntParam(rawOffset, "offset", 0, 0, 100000);
     // Lấy dư 1 dòng để biết còn trang sau hay không.
-    const rows = await this.orders.findSummariesByUser(userId, limit + 1, offset);
+    const rows = await this.orders.findSummariesByUser(
+      userId,
+      limit + 1,
+      offset,
+    );
     return {
       orders: rows.slice(0, limit).map(toSummary),
       limit,
@@ -83,7 +89,10 @@ export class CustomerOrdersService {
    * GET /orders/:id — chỉ chủ đơn. Đơn không tồn tại và đơn của người khác đều trả 404
    * (không lộ việc mã đơn đó có tồn tại).
    */
-  async getOrderDetail(userId: string, rawOrderId: string): Promise<OrderDetail> {
+  async getOrderDetail(
+    userId: string,
+    rawOrderId: string,
+  ): Promise<OrderDetail> {
     const orderId = (rawOrderId ?? "").trim();
     if (orderId === "" || orderId.length > MAX_ORDER_ID_LENGTH) {
       throw new BadRequestException("Mã đơn không hợp lệ");

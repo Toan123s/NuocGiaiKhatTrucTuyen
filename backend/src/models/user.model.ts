@@ -2,8 +2,8 @@
 // SQL luôn dùng tham số $1, $2...; chỉ findByEmail trả passwordHash (cho AuthService), các hàm còn lại không bao giờ SELECT password_hash.
 import { randomUUID } from "node:crypto";
 import { Inject, Injectable } from "@nestjs/common";
-import { DatabaseService } from "../config/db";
-import type { PublicUser, UserRecord } from "../types/auth.types";
+import { DatabaseService } from "../config/db.js";
+import type { PublicUser, UserRecord } from "../types/auth.types.js";
 interface PublicUserRow {
   id: string;
   email: string;
@@ -34,7 +34,9 @@ export class UserModel {
       [email],
     );
     const row = result.rows[0];
-    return row ? { ...toPublicUser(row), passwordHash: row.passwordHash } : null;
+    return row
+      ? { ...toPublicUser(row), passwordHash: row.passwordHash }
+      : null;
   }
   // Nhận hash từ AuthService (không bao giờ nhận mật khẩu thô). Email trùng làm DB ném lỗi 23505, service đổi thành 409.
   async createUser(

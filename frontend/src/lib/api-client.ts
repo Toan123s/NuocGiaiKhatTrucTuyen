@@ -42,7 +42,9 @@ function toApiError(status: number, payload: unknown): ApiError {
     typeof body.message === "string"
       ? body.message
       : Array.isArray(body.message)
-        ? body.message.filter((m): m is string => typeof m === "string").join(" ")
+        ? body.message
+            .filter((m): m is string => typeof m === "string")
+            .join(" ")
         : "";
   const code = typeof body.code === "string" ? body.code : undefined;
   const fieldErrors = isRecord(body.errors)
@@ -52,7 +54,12 @@ function toApiError(status: number, payload: unknown): ApiError {
         ),
       )
     : undefined;
-  return new ApiError(message || fallbackMessage(status), status, code, fieldErrors);
+  return new ApiError(
+    message || fallbackMessage(status),
+    status,
+    code,
+    fieldErrors,
+  );
 }
 export async function apiRequest<T>(
   path: string,
@@ -69,7 +76,8 @@ export async function apiRequest<T>(
     response = await fetch(`${API_BASE_URL}${path}`, {
       method: options.method ?? "GET",
       headers,
-      body: options.body === undefined ? undefined : JSON.stringify(options.body),
+      body:
+        options.body === undefined ? undefined : JSON.stringify(options.body),
       signal: options.signal ?? AbortSignal.timeout(REQUEST_TIMEOUT_MS),
       cache: "no-store",
     });

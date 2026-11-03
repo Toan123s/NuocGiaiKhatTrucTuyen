@@ -5,8 +5,8 @@
   --green: #244d3d;
   --line: #e7e9e1;
   --peach: #e9ad7e;
-  --font-sans: "Segoe UI", system-ui, -apple-system, BlinkMacSystemFont, Arial,
-    sans-serif;
+  --font-sans:
+    "Segoe UI", system-ui, -apple-system, BlinkMacSystemFont, Arial, sans-serif;
   --font-display: "Cambria", "Segoe UI", system-ui, sans-serif;
 }
 * {
@@ -1010,7 +1010,7 @@ p {
 }
 .primary-button.summary-button:disabled {
   cursor: not-allowed;
-  opacity: .55;
+  opacity: 0.55;
 }
 .summary-back-link {
   display: block;
@@ -1297,7 +1297,6 @@ p {
   }
 }
 
-
 /* ==========================================================================
    Product Detail View Styles (TV1)
    ========================================================================== */
@@ -1368,7 +1367,9 @@ p {
   border-radius: 8px;
   resize: none;
   outline: none;
-  transition: border-color 0.2s, box-shadow 0.2s;
+  transition:
+    border-color 0.2s,
+    box-shadow 0.2s;
 }
 .option-textarea:focus {
   border-color: var(--green);
@@ -1449,7 +1450,6 @@ p {
     gap: 24px;
   }
 }
-
 
 /* ==========================================================================
    Product Detail View Styles (TV1)
@@ -1596,7 +1596,6 @@ p {
   z-index: 1000;
 }
 
-
 /* Toast / Alert Notification */
 .alert,
 .toast-notification {
@@ -1607,7 +1606,9 @@ p {
   color: var(--ink);
   padding: 14px 18px;
   border-radius: 10px;
-  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.12), 0 8px 10px -6px rgba(0, 0, 0, 0.08);
+  box-shadow:
+    0 10px 25px -5px rgba(0, 0, 0, 0.12),
+    0 8px 10px -6px rgba(0, 0, 0, 0.08);
   border: 1px solid var(--line);
   border-left: 5px solid var(--green);
   z-index: 1000;
@@ -1688,7 +1689,6 @@ p {
   }
 }
 
-
 /* Toast / Alert Notification */
 .alert,
 .toast-notification {
@@ -1699,7 +1699,9 @@ p {
   color: var(--ink);
   padding: 14px 18px;
   border-radius: 10px;
-  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.12), 0 8px 10px -6px rgba(0, 0, 0, 0.08);
+  box-shadow:
+    0 10px 25px -5px rgba(0, 0, 0, 0.12),
+    0 8px 10px -6px rgba(0, 0, 0, 0.08);
   border: 1px solid var(--line);
   border-left: 5px solid var(--green);
   z-index: 1000;

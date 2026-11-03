@@ -2,17 +2,17 @@
 
 ## 1. Trạng thái phần TV6
 
-| Việc | Trạng thái | Nằm ở đâu |
-| --- | --- | --- |
-| API đọc đơn của chính user (`GET /orders/me`, `GET /orders/:id`) | Xong, có guard JWT của TV3 | `backend/src/controllers/customer/customer-orders.controller.ts` |
-| Quy tắc chuyển trạng thái đơn (khớp trigger `002`) | Xong, có test | `backend/src/services/order-state.service.ts` |
-| Health check có kiểm tra DB (503 khi DB lỗi) | Xong | `backend/src/controllers/system/health.controller.ts` |
-| Trang Đơn của tôi, Chi tiết đơn, Kết quả thanh toán | Xong | `frontend/src/views/customer/orders/`, `.../payment-status/` |
-| Frontend gửi token đăng nhập khi gọi `/orders/*` | Xong (đọc phiên của TV3) | `frontend/src/lib/client-api.ts` |
-| Smoke test sau deploy | Xong | `scripts/smoke.mjs`, chạy bằng `node scripts/smoke.mjs` |
-| Nút hủy đơn gọi API TV4 | Đã nối `POST /orders/:id/cancel`; cần E2E xác minh trên môi trường chạy thật | `OrderDetailView.tsx` |
-| E2E toàn luồng (menu → giỏ → đăng nhập → thanh toán → PAID) | Chưa làm được: thanh toán TV5 vẫn là khung 501 | `tests/e2e/checkout.spec.todo.ts` |
-| Workflow CD (image, registry, deploy, rollback) | Chưa làm: nhóm chưa chốt nơi hosting | xem mục 3 |
+| Việc                                                             | Trạng thái                                                                   | Nằm ở đâu                                                        |
+| ---------------------------------------------------------------- | ---------------------------------------------------------------------------- | ---------------------------------------------------------------- |
+| API đọc đơn của chính user (`GET /orders/me`, `GET /orders/:id`) | Xong, có guard JWT của TV3                                                   | `backend/src/controllers/customer/customer-orders.controller.ts` |
+| Quy tắc chuyển trạng thái đơn (khớp trigger `002`)               | Xong, có test                                                                | `backend/src/services/order-state.service.ts`                    |
+| Health check có kiểm tra DB (503 khi DB lỗi)                     | Xong                                                                         | `backend/src/controllers/system/health.controller.ts`            |
+| Trang Đơn của tôi, Chi tiết đơn, Kết quả thanh toán              | Xong                                                                         | `frontend/src/views/customer/orders/`, `.../payment-status/`     |
+| Frontend gửi token đăng nhập khi gọi `/orders/*`                 | Xong (đọc phiên của TV3)                                                     | `frontend/src/lib/client-api.ts`                                 |
+| Smoke test sau deploy                                            | Xong                                                                         | `scripts/smoke.mjs`, chạy bằng `node scripts/smoke.mjs`          |
+| Nút hủy đơn gọi API TV4                                          | Đã nối `POST /orders/:id/cancel`; cần E2E xác minh trên môi trường chạy thật | `OrderDetailView.tsx`                                            |
+| E2E toàn luồng (menu → giỏ → đăng nhập → thanh toán → PAID)      | Chưa làm được: thanh toán TV5 vẫn là khung 501                               | `tests/e2e/checkout.spec.todo.ts`                                |
+| Workflow CD (image, registry, deploy, rollback)                  | Chưa làm: nhóm chưa chốt nơi hosting                                         | xem mục 3                                                        |
 
 ## 2. Smoke test sau deploy
 

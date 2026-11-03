@@ -1,6 +1,6 @@
 import { Module } from '@nestjs/common';
-import { SepayController } from './sepay.controller';
-import { SepayService } from './sepay.services';
+import { SepayController } from './sepay.controller.js';
+import { SepayService } from './sepay.services.js';
 
 @Module({
   controllers: [SepayController],

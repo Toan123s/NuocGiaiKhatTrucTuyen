@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useState } from "react";
+import { FormEvent, useEffect, useState } from "react";
 
 interface PromotionInputProps {
   subtotal: number;
@@ -32,6 +32,10 @@ export function PromotionInput({
   const [code, setCode] = useState(appliedCode ?? "");
   const [inputError, setInputError] = useState<string>();
 
+  useEffect(() => {
+    setCode(appliedCode ?? "");
+  }, [appliedCode]);
+
   const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     const normalizedCode = code.trim().toUpperCase();
@@ -41,7 +45,6 @@ export function PromotionInput({
     }
 
     setInputError(undefined);
-    setCode(normalizedCode);
     onApplyCode(normalizedCode);
   };
 
@@ -69,7 +72,6 @@ export function PromotionInput({
           onChange={(event) => {
             setCode(event.target.value);
             setInputError(undefined);
-            if (appliedCode) onClearPromotion();
           }}
           disabled={isApplying}
         />

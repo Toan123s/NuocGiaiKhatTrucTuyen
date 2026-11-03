@@ -1,4 +1,4 @@
-import { CUSTOMER_ROUTES } from "../../routes/customer.routes";
+import { CUSTOMER_ROUTES } from "../../routes/customer.routes.js";
 import {
   BadRequestException,
   Body,
@@ -9,9 +9,12 @@ import {
   UnauthorizedException,
   UseGuards,
 } from "@nestjs/common";
-import { JwtAuthGuard, type AuthenticatedRequest } from "../../guards/jwt-auth.guard";
-import { OrdersService } from "../../services/orders.service";
-import type { CreateOrderInput } from "../../types/contracts";
+import {
+  JwtAuthGuard,
+  type AuthenticatedRequest,
+} from "../../guards/jwt-auth.guard.js";
+import { OrdersService } from "../../services/orders.service.js";
+import type { CreateOrderInput } from "../../types/contracts.js";
 
 function parseCreateOrderInput(body: unknown): CreateOrderInput {
   if (typeof body !== "object" || body === null) {
@@ -36,7 +39,9 @@ function parseCreateOrderInput(body: unknown): CreateOrderInput {
       typeof line.quantity !== "number" ||
       !Number.isInteger(line.quantity)
     ) {
-      throw new BadRequestException("Thông tin món trong đơn hàng không hợp lệ");
+      throw new BadRequestException(
+        "Thông tin món trong đơn hàng không hợp lệ",
+      );
     }
     return {
       productId: line.productId,
@@ -73,10 +78,7 @@ export class OrdersController {
   constructor(private readonly orders: OrdersService) {}
 
   @Post(CUSTOMER_ROUTES.orders.create)
-  createOrder(
-    @Req() request: AuthenticatedRequest,
-    @Body() body: unknown,
-  ) {
+  createOrder(@Req() request: AuthenticatedRequest, @Body() body: unknown) {
     return this.orders.createOrder(
       currentUserId(request),
       parseCreateOrderInput(body),
@@ -92,5 +94,19 @@ export class OrdersController {
       throw new BadRequestException("Mã đơn không hợp lệ");
     }
     return this.orders.cancelOrder(currentUserId(request), orderId.trim());
+  }
+
+  @Post(CUSTOMER_ROUTES.orders.retryPayment)
+  retryPayment(
+    @Req() request: AuthenticatedRequest,
+    @Param("id") orderId?: string,
+  ) {
+    if (typeof orderId !== "string" || orderId.trim() === "") {
+      throw new BadRequestException("Mã đơn không hợp lệ");
+    }
+    return this.orders.preparePaymentRetry(
+      currentUserId(request),
+      orderId.trim(),
+    );
   }
 }

@@ -4,8 +4,8 @@ import {
   type ExecutionContext,
   UnauthorizedException,
 } from "@nestjs/common";
-import type { AuthenticatedUser } from "../types/auth.types";
-import type { AuthenticatedRequest } from "./jwt-auth.guard";
+import type { AuthenticatedUser } from "../types/auth.types.js";
+import type { AuthenticatedRequest } from "./jwt-auth.guard.js";
 export const CurrentUser = createParamDecorator(
   (_data: unknown, context: ExecutionContext): AuthenticatedUser => {
     const request = context.switchToHttp().getRequest<AuthenticatedRequest>();

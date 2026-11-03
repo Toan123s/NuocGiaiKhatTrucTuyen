@@ -1,7 +1,7 @@
 // TV1 — Luật áp dụng và tính tiền khuyến mãi.
 import { BadRequestException, Inject, Injectable } from "@nestjs/common";
-import { PromotionModel } from "../models/promotion.model";
-import type { Promotion } from "../types/promotion";
+import { PromotionModel } from "../models/promotion.model.js";
+import type { Promotion } from "../types/promotion.js";
 
 @Injectable()
 export class PromotionsService {
@@ -51,16 +51,5 @@ export class PromotionsService {
     }
 
     return Math.min(discount, subtotal);
-  }
-
-  async previewPromotion(code: string, subtotal: number) {
-    const normalizedCode = code.trim().toUpperCase();
-    const discount = await this.calculateDiscount(normalizedCode, subtotal);
-    return {
-      code: normalizedCode,
-      subtotal,
-      discount,
-      total: subtotal - discount,
-    };
   }
 }

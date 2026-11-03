@@ -1,24 +1,23 @@
 # TV3: Tài khoản, bảo mật và CI (hướng dẫn và đối chiếu PHAN_CONG.md)
 
-
 ## 1. Đối chiếu với mục "Thành viên 3" của PHAN_CONG.md
 
-| Yêu cầu | Trạng thái | Ở đâu / ghi chú |
-|---|---|---|
-| register, login, logout, verifyAccessToken, handleSessionExpired | Xong | `backend/src/services/auth.service.ts`, `frontend/src/features/auth/auth.service.ts` |
-| Email unique (kể cả khác hoa thường), bcrypt, JWT | Xong | email chuẩn hóa chữ thường; unique index `lower(email)` của DB là nguồn sự thật, trùng trả 409 |
-| 401 khi token thiếu/sai/hết hạn, kiểm tra ở API chứ không chỉ UI | Xong | `JwtAuthGuard`; mã `TOKEN_MISSING` / `TOKEN_INVALID` / `TOKEN_EXPIRED` |
-| Không nhận role/userId tin cậy từ client | Xong | register chỉ đọc `email`, `password`; `userId` chỉ lấy từ JWT |
-| Guard và cách lấy user hiện tại cho TV4/TV5/TV6 | Xong | `backend/src/guards/` (mục 4) |
-| Không trả/log hash, mật khẩu, token | Xong | `passwordHash` chỉ có ở `UserRecord` nội bộ; log chỉ có thông điệp lỗi hạ tầng |
-| Quay lại URL nội bộ, không mất giỏ, không open redirect | Xong | `frontend/src/features/auth/return-url.ts`; không đụng key localStorage của giỏ |
-| npm ci, typecheck, lint, test, build trong CI | Viết xong, **chưa chạy trên GitHub** | `.github/workflows/ci.yml`, `eslint.config.mjs`, script `lint` ở `package.json` gốc |
-| Test email trùng/khác hoa thường, sai mật khẩu, JWT hết hạn, API bảo vệ | Viết xong, **cần chạy `npm test` trên máy có thư viện thật** | `backend/test/auth.test.ts`, `auth.db.test.ts`, `menu.test.ts` |
-| **Thống nhất cách lưu/gửi phiên với cả nhóm trước khi code** | **Chưa làm** | Tôi đã chọn JWT trong `localStorage`, gửi bằng `Authorization: Bearer`. Cần nhóm đồng ý (mục 8) |
-| **Required checks / branch protection trên GitHub** | **Chưa làm, cần làm cùng chủ repo** | Mục 7 |
-| **Minh chứng CI qua và CI phát hiện lỗi** | **Chưa làm** | Mục 7 |
-| Phối hợp TV1 (.env trong Docker) và TV6 (secrets production) | Cần nhắn | Mục 5 và 10 |
-| Không đổi transaction helper | Giữ nguyên | `config/db.ts` không bị sửa |
+| Yêu cầu                                                                 | Trạng thái                                                   | Ở đâu / ghi chú                                                                                 |
+| ----------------------------------------------------------------------- | ------------------------------------------------------------ | ----------------------------------------------------------------------------------------------- |
+| register, login, logout, verifyAccessToken, handleSessionExpired        | Xong                                                         | `backend/src/services/auth.service.ts`, `frontend/src/features/auth/auth.service.ts`            |
+| Email unique (kể cả khác hoa thường), bcrypt, JWT                       | Xong                                                         | email chuẩn hóa chữ thường; unique index `lower(email)` của DB là nguồn sự thật, trùng trả 409  |
+| 401 khi token thiếu/sai/hết hạn, kiểm tra ở API chứ không chỉ UI        | Xong                                                         | `JwtAuthGuard`; mã `TOKEN_MISSING` / `TOKEN_INVALID` / `TOKEN_EXPIRED`                          |
+| Không nhận role/userId tin cậy từ client                                | Xong                                                         | register chỉ đọc `email`, `password`; `userId` chỉ lấy từ JWT                                   |
+| Guard và cách lấy user hiện tại cho TV4/TV5/TV6                         | Xong                                                         | `backend/src/guards/` (mục 4)                                                                   |
+| Không trả/log hash, mật khẩu, token                                     | Xong                                                         | `passwordHash` chỉ có ở `UserRecord` nội bộ; log chỉ có thông điệp lỗi hạ tầng                  |
+| Quay lại URL nội bộ, không mất giỏ, không open redirect                 | Xong                                                         | `frontend/src/features/auth/return-url.ts`; không đụng key localStorage của giỏ                 |
+| npm ci, typecheck, lint, test, build trong CI                           | Viết xong, **chưa chạy trên GitHub**                         | `.github/workflows/ci.yml`, `eslint.config.mjs`, script `lint` ở `package.json` gốc             |
+| Test email trùng/khác hoa thường, sai mật khẩu, JWT hết hạn, API bảo vệ | Viết xong, **cần chạy `npm test` trên máy có thư viện thật** | `backend/test/auth.test.ts`, `auth.db.test.ts`, `menu.test.ts`                                  |
+| **Thống nhất cách lưu/gửi phiên với cả nhóm trước khi code**            | **Chưa làm**                                                 | Tôi đã chọn JWT trong `localStorage`, gửi bằng `Authorization: Bearer`. Cần nhóm đồng ý (mục 8) |
+| **Required checks / branch protection trên GitHub**                     | **Chưa làm, cần làm cùng chủ repo**                          | Mục 7                                                                                           |
+| **Minh chứng CI qua và CI phát hiện lỗi**                               | **Chưa làm**                                                 | Mục 7                                                                                           |
+| Phối hợp TV1 (.env trong Docker) và TV6 (secrets production)            | Cần nhắn                                                     | Mục 5 và 10                                                                                     |
+| Không đổi transaction helper                                            | Giữ nguyên                                                   | `config/db.ts` không bị sửa                                                                     |
 
 ## 2. File dùng chung đã sửa (báo nhóm trước khi merge)
 
@@ -34,11 +33,11 @@
 
 ## 4. Hợp đồng API và cách TV4/5/6 dùng guard
 
-| Endpoint | Body | Thành công | Lỗi |
-|---|---|---|---|
-| `POST /auth/register` | `{ email, password }` | 201 `{ user }` | 400 `VALIDATION_FAILED` (+`errors`), 409 `EMAIL_TAKEN`, 503 |
-| `POST /auth/login` | `{ email, password }` | 200 `{ accessToken, tokenType, expiresIn, user }` | 400, 401 `INVALID_CREDENTIALS`, 503 |
-| `GET /auth/me` | header Bearer | 200 `{ user }` | 401 (3 mã token), 404, 503 |
+| Endpoint              | Body                  | Thành công                                        | Lỗi                                                         |
+| --------------------- | --------------------- | ------------------------------------------------- | ----------------------------------------------------------- |
+| `POST /auth/register` | `{ email, password }` | 201 `{ user }`                                    | 400 `VALIDATION_FAILED` (+`errors`), 409 `EMAIL_TAKEN`, 503 |
+| `POST /auth/login`    | `{ email, password }` | 200 `{ accessToken, tokenType, expiresIn, user }` | 400, 401 `INVALID_CREDENTIALS`, 503                         |
+| `GET /auth/me`        | header Bearer         | 200 `{ user }`                                    | 401 (3 mã token), 404, 503                                  |
 
 `user = { id, email, displayName, loyaltyPoints }`. Mật khẩu 8 đến 72 byte, có chữ và số. 24 tài khoản seed `khach01@brewlite.test` đến `khach24@brewlite.test` đăng nhập được bằng `BrewLite123!`.
 
@@ -49,6 +48,7 @@ createOrder(@CurrentUser() user: AuthenticatedUser, @Body() body: unknown) {
   return this.orders.createOrder(user.id, body); // userId luôn lấy từ JWT, không tin userId trong body
 }
 ```
+
 Phía web gọi `authorizedRequest<T>(path, { method, body })` từ `@/features/auth/auth.service`: tự gắn token, gặp 401 thì xóa phiên và đưa về `/login?returnUrl=...`. Guard chỉ kiểm tra token, không truy vấn DB; TV4/5/6 vẫn phải kiểm tra chủ đơn.
 
 ## 5. Biến môi trường (`.env_vidu` đã được cập nhật)
@@ -69,8 +69,9 @@ Nhắn TV1: service api trong Compose cần `JWT_SECRET`, `DB_*`, `FRONTEND_ORIG
 ## 7. CI, branch protection và minh chứng (cần làm trên GitHub)
 
 Workflow **Check scaffold**, job **`check`**: báo tên này cho TV6. `ci.yml` chạy `npm ci`, `typecheck`, `lint`, `test`, `build` ở gốc (npm workspaces, một lock ở gốc); `npm run lint` chạy `eslint .` một lần cho cả hai thư mục bằng `eslint.config.mjs`.
+
 1. Đẩy nhánh `tv3-auth-ci`, mở PR để workflow chạy ít nhất một lần.
-2. Settings → Branches → Add branch protection rule, pattern `main`: bật *Require a pull request before merging*, bật *Require status checks to pass* và chọn `check`, bật *Require branches to be up to date*. Cần quyền admin nên làm cùng chủ repo. `ci.yml` cũng chạy khi push vào `scaffold/brewlite-customer`; nếu nhánh đó còn dùng thì áp quy tắc tương tự.
+2. Settings → Branches → Add branch protection rule, pattern `main`: bật _Require a pull request before merging_, bật _Require status checks to pass_ và chọn `check`, bật _Require branches to be up to date_. Cần quyền admin nên làm cùng chủ repo. `ci.yml` cũng chạy khi push vào `scaffold/brewlite-customer`; nếu nhánh đó còn dùng thì áp quy tắc tương tự.
 3. Minh chứng "CI qua": chụp PR có dấu tick xanh.
 4. Minh chứng "CI phát hiện lỗi": tạo nhánh tạm, cố ý thêm `if (1 == 1) {}` (vi phạm `eqeqeq`) hoặc sửa một test cho sai, đẩy lên, chụp PR đỏ và nút Merge bị chặn, rồi đóng PR tạm.
 
@@ -83,6 +84,7 @@ Workflow **Check scaffold**, job **`check`**: báo tên này cho TV6. `ci.yml` c
 Sandbox không có mạng và không có PostgreSQL, nên không cài được NestJS, pg, bcryptjs, jsonwebtoken, PGlite thật.
 
 **Đã kiểm chứng:**
+
 - SQL của `UserModel` đối chiếu bằng cách đọc `001_schema.sql` thật: các cột, `NOT NULL`, `DEFAULT` và `CHECK` đều thỏa; unique index `lower(email)` có sẵn; trigger điểm thưởng không bị vi phạm khi tạo user với 0 điểm.
 - Bằng bcrypt thật: mật khẩu `BrewLite123!` khớp hash seed, và hash bcrypt mới sinh ra khớp `CHECK password_hash` của schema.
 - `tsc` strict với `backend/tsconfig.json` và `frontend/tsconfig.json` thật (chỉ thêm `ignoreDeprecations` vì sandbox dùng TypeScript 6.0, repo dùng 5.9.3), và build backend ra `dist` thành công.

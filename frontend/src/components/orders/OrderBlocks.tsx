@@ -1,9 +1,6 @@
 // TV6 — Thành phần nhỏ dùng chung cho các trang đơn hàng. Dùng lại class .state/.primary-button của TV1.
 import Link from "next/link";
-import {
-  STATUS_LABEL,
-  STATUS_TONE,
-} from "@/features/orders/order-format";
+import { STATUS_LABEL, STATUS_TONE } from "@/features/orders/order-format";
 import type { LoadFailure } from "@/lib/client-api";
 import type { OrderStatus } from "@/types/customer-order";
 import "./orders.css";
@@ -86,7 +83,8 @@ export function FailureBlock({
   returnTo: string;
   onRetry: () => void;
 }) {
-  if (failure.kind === "unauthorized") return <LoginPrompt returnTo={returnTo} />;
+  if (failure.kind === "unauthorized")
+    return <LoginPrompt returnTo={returnTo} />;
   if (failure.kind === "notfound") return <NotFoundBlock />;
   return (
     <ErrorBlock

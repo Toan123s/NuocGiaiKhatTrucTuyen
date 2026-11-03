@@ -69,7 +69,7 @@ export function ProductDetailView({ product }: ProductDetailViewProps) {
     setTimeout(() => {
       setToast(null);
     }, 4000);
-    setNote(""); 
+    setNote("");
   };
 
   return (
@@ -184,7 +184,6 @@ export function ProductDetailView({ product }: ProductDetailViewProps) {
               placeholder="Ghi yêu cầu của bạn tại đây..."
               value={note}
               onChange={(e) => setNote(e.target.value)}
-              
             />
           </div>
           {/* Nút thêm vào giỏ */}
@@ -201,4 +200,3 @@ export function ProductDetailView({ product }: ProductDetailViewProps) {
     </div>
   );
 }
-

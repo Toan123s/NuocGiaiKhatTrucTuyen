@@ -9,10 +9,10 @@ import {
   NotFoundException,
   ServiceUnavailableException,
 } from "@nestjs/common";
-import { isUniqueViolation } from "../models/db-errors";
-import { dataSource } from "../config/environment";
-import { UserModel } from "../models/user.model";
-import type { PublicUser, UserRecord } from "../types/auth.types";
+import { isUniqueViolation } from "../models/db-errors.js";
+import { dataSource } from "../config/environment.js";
+import { UserModel } from "../models/user.model.js";
+import type { PublicUser, UserRecord } from "../types/auth.types.js";
 @Injectable()
 export class UsersService {
   private readonly logger = new Logger(UsersService.name);
@@ -30,7 +30,8 @@ export class UsersService {
           throw new ConflictException({
             statusCode: 409,
             code: "EMAIL_TAKEN",
-            message: "Email này đã được đăng ký. Hãy đăng nhập hoặc dùng email khác.",
+            message:
+              "Email này đã được đăng ký. Hãy đăng nhập hoặc dùng email khác.",
             errors: { email: "Email này đã được đăng ký." },
           });
         throw error;

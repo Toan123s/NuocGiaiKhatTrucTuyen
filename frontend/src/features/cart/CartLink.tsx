@@ -7,7 +7,10 @@ import { cartStore } from "./cart.store";
 export function CartLink() {
   const [count, setCount] = useState(0);
   useEffect(() => {
-    const update = () => setCount(cartStore.restoreCart().reduce((sum, item) => sum + item.quantity, 0));
+    const update = () =>
+      setCount(
+        cartStore.restoreCart().reduce((sum, item) => sum + item.quantity, 0),
+      );
     update();
     window.addEventListener("storage", update);
     window.addEventListener("brewlite:cart-changed", update);
@@ -18,8 +21,15 @@ export function CartLink() {
   }, []);
 
   return (
-    <Link href="/cart" className="cart-link" aria-label={`Giỏ hàng, ${count} món`}>
-      Giỏ hàng <span className="cart-count" aria-live="polite">{count}</span>
+    <Link
+      href="/cart"
+      className="cart-link"
+      aria-label={`Giỏ hàng, ${count} món`}
+    >
+      Giỏ hàng{" "}
+      <span className="cart-count" aria-live="polite">
+        {count}
+      </span>
     </Link>
   );
 }

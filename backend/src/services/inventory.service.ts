@@ -4,9 +4,9 @@ import {
   Injectable,
   NotFoundException,
 } from "@nestjs/common";
-import { InventoryModel } from "../models/inventory.model";
-import type { PoolClient, StockItem } from "../types/contracts";
-import type { OrderLine } from "../types/contracts";
+import { InventoryModel } from "../models/inventory.model.js";
+import type { PoolClient, StockItem } from "../types/contracts.js";
+import type { OrderLine } from "../types/contracts.js";
 
 @Injectable()
 export class InventoryService {
@@ -18,7 +18,10 @@ export class InventoryService {
     transaction: PoolClient,
     orderId?: string,
   ): Promise<void> {
-    if (orderId && items.every((item) => "size" in item && "toppingIds" in item)) {
+    if (
+      orderId &&
+      items.every((item) => "size" in item && "toppingIds" in item)
+    ) {
       const reserved = await this.inventoryModel.reserveIngredients(
         items as OrderLine[],
         orderId,
@@ -33,7 +36,10 @@ export class InventoryService {
     }
 
     for (const [productId, quantity] of totals) {
-      const snapshot = await this.inventoryModel.findStock(productId, transaction);
+      const snapshot = await this.inventoryModel.findStock(
+        productId,
+        transaction,
+      );
       if (snapshot === null) {
         throw new NotFoundException(`Không tìm thấy sản phẩm ${productId}`);
       }
@@ -48,13 +54,18 @@ export class InventoryService {
         transaction,
       );
       if (!ok) {
-        throw new ConflictException(`Sản phẩm ${productId} vừa bị người khác đặt`);
+        throw new ConflictException(
+          `Sản phẩm ${productId} vừa bị người khác đặt`,
+        );
       }
     }
   }
 
   // true = vừa hoàn tồn, false = đã hoàn trước đó (không phải lỗi).
-  async releaseStock(orderId: string, transaction: PoolClient): Promise<boolean> {
+  async releaseStock(
+    orderId: string,
+    transaction: PoolClient,
+  ): Promise<boolean> {
     return this.inventoryModel.restoreStockOnce(orderId, transaction);
   }
 }

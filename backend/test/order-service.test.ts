@@ -8,13 +8,13 @@ import {
   ConflictException,
   NotFoundException,
 } from "@nestjs/common";
-import { OrderModel } from "../src/models/order.model";
-import { InventoryModel } from "../src/models/inventory.model";
-import { PromotionModel } from "../src/models/promotion.model";
-import { InventoryService } from "../src/services/inventory.service";
-import { OrdersService } from "../src/services/orders.service";
-import { PromotionsService } from "../src/services/promotions.service";
-import type { CreateOrderInput } from "../src/types/contracts";
+import { OrderModel } from "../src/models/order.model.js";
+import { InventoryModel } from "../src/models/inventory.model.js";
+import { PromotionModel } from "../src/models/promotion.model.js";
+import { InventoryService } from "../src/services/inventory.service.js";
+import { OrdersService } from "../src/services/orders.service.js";
+import { PromotionsService } from "../src/services/promotions.service.js";
+import type { CreateOrderInput } from "../src/types/contracts.js";
 import {
   EXTRA_M,
   PRODUCT_ID,
@@ -29,7 +29,7 @@ import {
   readStock,
   setStock,
   type Tx,
-} from "./tv4-helpers";
+} from "./tv4-helpers.js";
 
 let db: PGlite;
 let tx: Tx;
@@ -88,13 +88,19 @@ async function simulatePaymentFailure(orderId: string, amount: number) {
       "UPDATE payments SET status = 'FAILED', resolved_at = now() WHERE order_id = $1",
       [orderId],
     );
-    await c.query("UPDATE orders SET status = 'PAYMENT_FAILED' WHERE id = $1", [orderId]);
+    await c.query("UPDATE orders SET status = 'PAYMENT_FAILED' WHERE id = $1", [
+      orderId,
+    ]);
     await inventory.releaseStock(orderId, c);
   });
 }
 
 // Đơn đã quá hạn (chèn thẳng) và trừ tồn thủ công như khi createOrder đã giữ tồn.
-async function insertExpiredOrder(id: string, quantity: number, processingPayment: boolean) {
+async function insertExpiredOrder(
+  id: string,
+  quantity: number,
+  processingPayment: boolean,
+) {
   const total = UNIT_S * quantity;
   await tx(async (c) => {
     await c.query(
@@ -115,7 +121,10 @@ async function insertExpiredOrder(id: string, quantity: number, processingPaymen
       );
     }
   });
-  await db.query("UPDATE products SET stock = stock - $1 WHERE id = $2", [quantity, PRODUCT_ID]);
+  await db.query("UPDATE products SET stock = stock - $1 WHERE id = $2", [
+    quantity,
+    PRODUCT_ID,
+  ]);
 }
 
 test("createOrder tính giá từ DB (bỏ qua giá client), giữ tồn và ghi đơn + chi tiết", async () => {
@@ -173,7 +182,9 @@ test("createOrder gộp số lượng theo productId", async () => {
   assert.equal(await countOrders(db), ordersBefore);
 
   await setStock(db, 7);
-  const result = await service.createOrder(USER_ID, { items: [line(3), line(4)] });
+  const result = await service.createOrder(USER_ID, {
+    items: [line(3), line(4)],
+  });
   assert.equal(result.subtotal, UNIT_S * 7);
   assert.equal(await readStock(db), 0);
   const items = await db.query<{ n: number }>(
@@ -192,14 +203,20 @@ test("createOrder từ chối sản phẩm/size/topping sai và không đụng t
     { items: [line(1, "S", ["tc", "tc"])] },
   ];
   for (const input of badInputs) {
-    await assert.rejects(() => service.createOrder(USER_ID, input), BadRequestException);
+    await assert.rejects(
+      () => service.createOrder(USER_ID, input),
+      BadRequestException,
+    );
   }
   assert.equal(await readStock(db), 10);
   assert.equal(await countOrders(db), ordersBefore);
 });
 
 test("createOrder kiểm tra đầu vào: items rỗng/thiếu và quantity sai", async () => {
-  await assert.rejects(() => service.createOrder(USER_ID, { items: [] }), BadRequestException);
+  await assert.rejects(
+    () => service.createOrder(USER_ID, { items: [] }),
+    BadRequestException,
+  );
   await assert.rejects(
     () => service.createOrder(USER_ID, {} as unknown as CreateOrderInput),
     BadRequestException,
@@ -219,26 +236,41 @@ test("cancelOrder: chặn người lạ, hủy hoàn tồn đúng một lần, k
   const created = await createOrder(2);
   assert.equal(await readStock(db), 8);
 
-  await assert.rejects(() => service.cancelOrder("nguoi-la", created.orderId), NotFoundException);
-  await assert.rejects(() => service.cancelOrder(USER_ID, "khong-co"), NotFoundException);
+  await assert.rejects(
+    () => service.cancelOrder("nguoi-la", created.orderId),
+    NotFoundException,
+  );
+  await assert.rejects(
+    () => service.cancelOrder(USER_ID, "khong-co"),
+    NotFoundException,
+  );
   assert.equal((await readOrder(db, created.orderId)).status, "PENDING");
   assert.equal(await readStock(db), 8);
 
   const cancelled = await service.cancelOrder(USER_ID, created.orderId);
-  assert.deepEqual(cancelled, { orderId: created.orderId, status: "CANCELLED" });
+  assert.deepEqual(cancelled, {
+    orderId: created.orderId,
+    status: "CANCELLED",
+  });
   const order = await readOrder(db, created.orderId);
   assert.equal(order.status, "CANCELLED");
   assert.equal(order.stock_released, true);
   assert.equal(await readStock(db), 10);
 
-  await assert.rejects(() => service.cancelOrder(USER_ID, created.orderId), ConflictException);
+  await assert.rejects(
+    () => service.cancelOrder(USER_ID, created.orderId),
+    ConflictException,
+  );
   assert.equal(await readStock(db), 10); // không hoàn lần hai
 });
 
 test("cancelOrder bị chặn khi đang có thanh toán PROCESSING", async () => {
   const created = await createOrder(1);
   await addProcessingPayment(created.orderId, created.total);
-  await assert.rejects(() => service.cancelOrder(USER_ID, created.orderId), ConflictException);
+  await assert.rejects(
+    () => service.cancelOrder(USER_ID, created.orderId),
+    ConflictException,
+  );
   assert.equal((await readOrder(db, created.orderId)).status, "PENDING");
   assert.equal(await readStock(db), 9);
 });
@@ -303,14 +335,22 @@ test("preparePaymentRetry: giữ tồn mới rồi đưa PAYMENT_FAILED về PEN
 
 test("InventoryService: reserveStock đủ/thiếu/không tồn tại, releaseStock trả true rồi false", async () => {
   await assert.rejects(
-    () => tx((c) => inventory.reserveStock([{ productId: "khong-co", quantity: 1 }], c)),
+    () =>
+      tx((c) =>
+        inventory.reserveStock([{ productId: "khong-co", quantity: 1 }], c),
+      ),
     NotFoundException,
   );
 
-  await tx((c) => inventory.reserveStock([{ productId: PRODUCT_ID, quantity: 10 }], c));
+  await tx((c) =>
+    inventory.reserveStock([{ productId: PRODUCT_ID, quantity: 10 }], c),
+  );
   assert.equal(await readStock(db), 0);
   await assert.rejects(
-    () => tx((c) => inventory.reserveStock([{ productId: PRODUCT_ID, quantity: 1 }], c)),
+    () =>
+      tx((c) =>
+        inventory.reserveStock([{ productId: PRODUCT_ID, quantity: 1 }], c),
+      ),
     ConflictException,
   );
   assert.equal(await readStock(db), 0);

@@ -1,4 +1,4 @@
-import { SYSTEM_ROUTES } from "../../routes/system.routes";
+import { SYSTEM_ROUTES } from "../../routes/system.routes.js";
 // TV6 — Kiểm tra API và DB; lỗi DB trả 503, không báo healthy giả.
 import {
   Inject,
@@ -6,8 +6,8 @@ import {
   Get,
   ServiceUnavailableException,
 } from "@nestjs/common";
-import { DatabaseService } from "../../config/db";
-import { dataSource } from "../../config/environment";
+import { DatabaseService } from "../../config/db.js";
+import { dataSource } from "../../config/environment.js";
 @Controller(SYSTEM_ROUTES.health.base)
 export class HealthController {
   constructor(@Inject(DatabaseService) private readonly db: DatabaseService) {}

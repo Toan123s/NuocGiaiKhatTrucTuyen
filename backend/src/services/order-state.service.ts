@@ -6,8 +6,8 @@ import {
   Injectable,
   NotFoundException,
 } from "@nestjs/common";
-import { CustomerOrderModel } from "../models/customer-order.model";
-import type { OrderStatus, PoolClient } from "../types/contracts";
+import { CustomerOrderModel } from "../models/customer-order.model.js";
+import type { OrderStatus, PoolClient } from "../types/contracts.js";
 
 export const ORDER_TRANSITIONS: Readonly<
   Record<OrderStatus, readonly OrderStatus[]>
@@ -46,9 +46,7 @@ export class OrderStateService {
   /** Ném 409 nếu cạnh chuyển không có trong bảng. */
   assertTransition(from: OrderStatus, to: OrderStatus): void {
     if (!this.canTransition(from, to)) {
-      throw new ConflictException(
-        `Không thể chuyển đơn từ ${from} sang ${to}`,
-      );
+      throw new ConflictException(`Không thể chuyển đơn từ ${from} sang ${to}`);
     }
   }
 
@@ -62,10 +60,7 @@ export class OrderStateService {
    * Quyết định thật nằm ở TV4 (POST /orders/:id/cancel).
    */
   canCancel(status: OrderStatus, hasProcessingPayment: boolean): boolean {
-    return (
-      !hasProcessingPayment &&
-      this.canTransition(status, "CANCELLED")
-    );
+    return !hasProcessingPayment && this.canTransition(status, "CANCELLED");
   }
 
   /** Gợi ý cho UI: chỉ đơn PAYMENT_FAILED mới có nút thử lại (luồng TV5/TV4). */

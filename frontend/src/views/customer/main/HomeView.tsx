@@ -64,7 +64,7 @@ export function HomeView({
               </strong>
             </div>
             <div className="hero-photo-frame">
-             <img src="/images/products/logo_main.png" alt="Ảnh đồ uống" />
+              <img src="/images/products/logo_main.png" alt="Ảnh đồ uống" />
             </div>
             <div className="visual-bottom">
               FRESHLY MADE <span>WITH LOVE, ALWAYS.</span>

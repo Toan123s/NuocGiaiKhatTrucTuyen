@@ -18,13 +18,6 @@ interface CreatedOrder {
   total: number;
 }
 
-interface PromotionPreview {
-  code: string;
-  subtotal: number;
-  discount: number;
-  total: number;
-}
-
 const money = new Intl.NumberFormat("vi-VN");
 const formatCurrency = (value: number) => `${money.format(value)} đ`;
 
@@ -33,9 +26,6 @@ export function CheckoutView() {
   const [items, setItems] = useState<CartItem[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
   const [promotionCode, setPromotionCode] = useState("");
-  const [promotionDiscount, setPromotionDiscount] = useState(0);
-  const [promotionError, setPromotionError] = useState("");
-  const [applyingPromotion, setApplyingPromotion] = useState(false);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
@@ -57,42 +47,21 @@ export function CheckoutView() {
     };
   }, [refreshCart]);
 
-  const subtotal = useMemo(() => cartStore.calculateSubtotal(products), [items, products]);
-  const unavailable = items.filter((item) => !products.some((product) => product.id === item.productId));
-
-  const applyPromotion = async (code: string) => {
-    setPromotionError("");
-    setApplyingPromotion(true);
-    try {
-      const preview = await apiRequest<PromotionPreview>("/promotions/validate", {
-        method: "POST",
-        body: { code, subtotal },
-      });
-      setPromotionCode(preview.code);
-      setPromotionDiscount(preview.discount);
-    } catch (requestError) {
-      setPromotionCode("");
-      setPromotionDiscount(0);
-      setPromotionError(
-        requestError instanceof ApiError
-          ? requestError.message
-          : "Không thể kiểm tra mã giảm giá. Vui lòng thử lại.",
-      );
-    } finally {
-      setApplyingPromotion(false);
-    }
-  };
-
-  const clearPromotion = () => {
-    setPromotionCode("");
-    setPromotionDiscount(0);
-    setPromotionError("");
-  };
+  const subtotal = useMemo(
+    () => cartStore.calculateSubtotal(products),
+    [items, products],
+  );
+  const unavailable = items.filter(
+    (item) => !products.some((product) => product.id === item.productId),
+  );
 
   const submitOrder = async () => {
-    if (submitting || items.length === 0 || loading || unavailable.length > 0) return;
+    if (submitting || items.length === 0 || loading || unavailable.length > 0)
+      return;
     if (!session) {
-      window.location.assign(`/login?returnUrl=${encodeURIComponent("/checkout")}`);
+      window.location.assign(
+        `/login?returnUrl=${encodeURIComponent("/checkout")}`,
+      );
       return;
     }
     setError("");
@@ -112,9 +81,10 @@ export function CheckoutView() {
       });
       setCreatedOrder(result);
     } catch (requestError) {
-      const message = requestError instanceof ApiError
-        ? requestError.message
-        : "Chưa thể tạo đơn hàng. Vui lòng thử lại.";
+      const message =
+        requestError instanceof ApiError
+          ? requestError.message
+          : "Chưa thể tạo đơn hàng. Vui lòng thử lại.";
       setError(message);
     } finally {
       setSubmitting(false);
@@ -122,14 +92,34 @@ export function CheckoutView() {
   };
 
   if (loading) {
-    return <section className="container shopping-page"><div className="shopping-state" aria-live="polite">Đang chuẩn bị xác nhận đơn…</div></section>;
+    return (
+      <section className="container shopping-page">
+        <div className="shopping-state" aria-live="polite">
+          Đang chuẩn bị xác nhận đơn…
+        </div>
+      </section>
+    );
   }
 
   if (items.length === 0 && !createdOrder) {
     return (
       <section className="container shopping-page">
-        <div className="shopping-heading"><div><span className="eyebrow">HOÀN TẤT ĐẶT MÓN</span><h1>Xác nhận đơn</h1></div></div>
-        <div className="shopping-empty"><span className="empty-cup" aria-hidden="true">☕</span><h2>Chưa có món để xác nhận</h2><p>Thêm món vào giỏ hàng rồi quay lại đây nhé.</p><Link href="/" className="primary-button">Xem thực đơn</Link></div>
+        <div className="shopping-heading">
+          <div>
+            <span className="eyebrow">HOÀN TẤT ĐẶT MÓN</span>
+            <h1>Xác nhận đơn</h1>
+          </div>
+        </div>
+        <div className="shopping-empty">
+          <span className="empty-cup" aria-hidden="true">
+            ☕
+          </span>
+          <h2>Chưa có món để xác nhận</h2>
+          <p>Thêm món vào giỏ hàng rồi quay lại đây nhé.</p>
+          <Link href="/" className="primary-button">
+            Xem thực đơn
+          </Link>
+        </div>
       </section>
     );
   }
@@ -138,14 +128,33 @@ export function CheckoutView() {
     return (
       <section className="container shopping-page">
         <div className="checkout-success" role="status">
-          <span className="success-mark" aria-hidden="true">✓</span>
+          <span className="success-mark" aria-hidden="true">
+            ✓
+          </span>
           <span className="eyebrow">ĐƠN HÀNG ĐÃ ĐƯỢC TẠO</span>
           <h1>Đơn của bạn đã sẵn sàng</h1>
-          <p className="order-number">Mã đơn <strong>{createdOrder.orderId}</strong></p>
-          <div className="official-total"><span>Tổng tiền máy chủ xác nhận</span><strong>{formatCurrency(createdOrder.total)}</strong></div>
-          {createdOrder.discount > 0 && <p className="confirmed-discount">Đã giảm {formatCurrency(createdOrder.discount)}{promotionCode ? ` với mã ${promotionCode}` : ""}.</p>}
-          <p className="summary-note">Giỏ hàng được giữ lại cho tới khi thanh toán thành công.</p>
-          <Link href={`/payment?orderId=${encodeURIComponent(createdOrder.orderId)}`} className="primary-button">Tiến hành thanh toán <span aria-hidden="true">→</span></Link>
+          <p className="order-number">
+            Mã đơn <strong>{createdOrder.orderId}</strong>
+          </p>
+          <div className="official-total">
+            <span>Tổng tiền máy chủ xác nhận</span>
+            <strong>{formatCurrency(createdOrder.total)}</strong>
+          </div>
+          {createdOrder.discount > 0 && (
+            <p className="confirmed-discount">
+              Đã giảm {formatCurrency(createdOrder.discount)}
+              {promotionCode ? ` với mã ${promotionCode}` : ""}.
+            </p>
+          )}
+          <p className="summary-note">
+            Giỏ hàng được giữ lại cho tới khi thanh toán thành công.
+          </p>
+          <Link
+            href={`/payment?orderId=${encodeURIComponent(createdOrder.orderId)}`}
+            className="primary-button"
+          >
+            Tiến hành thanh toán <span aria-hidden="true">→</span>
+          </Link>
         </div>
       </section>
     );
@@ -159,70 +168,184 @@ export function CheckoutView() {
           <h1>Xác nhận đơn hàng</h1>
           <p>Đơn hàng sẽ được chuẩn bị để bạn nhận tại quầy.</p>
         </div>
-        <Link href="/cart" className="text-link">← Quay lại giỏ hàng</Link>
+        <Link href="/cart" className="text-link">
+          ← Quay lại giỏ hàng
+        </Link>
       </div>
 
-      {error && <p className="cart-error" role="alert">{error}</p>}
-      {unavailable.length > 0 && <p className="cart-error" role="alert">Một số món không còn trong thực đơn. Hãy quay lại giỏ hàng và xóa các món đó.</p>}
+      {error && (
+        <p className="cart-error" role="alert">
+          {error}
+        </p>
+      )}
+      {unavailable.length > 0 && (
+        <p className="cart-error" role="alert">
+          Một số món không còn trong thực đơn. Hãy quay lại giỏ hàng và xóa các
+          món đó.
+        </p>
+      )}
 
       <div className="checkout-layout">
         <div className="checkout-main">
           <section className="checkout-card">
-            <div className="checkout-section-title"><span className="step-number">1</span><div><h2>Thông tin nhận món</h2><p>Đặt trước và nhận món tại quầy BrewLite.</p></div></div>
-            <div className="pickup-note"><span aria-hidden="true">⌖</span><div><strong>Nhận tại quầy</strong><p>Sau khi thanh toán thành công, nhân viên sẽ chuẩn bị đơn của bạn.</p></div></div>
+            <div className="checkout-section-title">
+              <span className="step-number">1</span>
+              <div>
+                <h2>Thông tin nhận món</h2>
+                <p>Đặt trước và nhận món tại quầy BrewLite.</p>
+              </div>
+            </div>
+            <div className="pickup-note">
+              <span aria-hidden="true">⌖</span>
+              <div>
+                <strong>Nhận tại quầy</strong>
+                <p>
+                  Sau khi thanh toán thành công, nhân viên sẽ chuẩn bị đơn của
+                  bạn.
+                </p>
+              </div>
+            </div>
           </section>
 
           <section className="checkout-card">
-            <div className="checkout-section-title"><span className="step-number">2</span><div><h2>Kiểm tra món</h2><p>{items.reduce((sum, item) => sum + item.quantity, 0)} món trong giỏ hàng</p></div></div>
+            <div className="checkout-section-title">
+              <span className="step-number">2</span>
+              <div>
+                <h2>Kiểm tra món</h2>
+                <p>
+                  {items.reduce((sum, item) => sum + item.quantity, 0)} món
+                  trong giỏ hàng
+                </p>
+              </div>
+            </div>
             <div className="checkout-items">
               {items.map((item) => {
-                const product = products.find((candidate) => candidate.id === item.productId);
-                const size = product?.sizes.find((option) => option.name === item.size);
-                const toppings = product?.toppings.filter((option) => item.toppingIds.includes(option.id)) ?? [];
-                const unitPrice = product && size ? product.price + size.extraPrice + toppings.reduce((sum, topping) => sum + topping.price, 0) : 0;
+                const product = products.find(
+                  (candidate) => candidate.id === item.productId,
+                );
+                const size = product?.sizes.find(
+                  (option) => option.name === item.size,
+                );
+                const toppings =
+                  product?.toppings.filter((option) =>
+                    item.toppingIds.includes(option.id),
+                  ) ?? [];
+                const unitPrice =
+                  product && size
+                    ? product.price +
+                      size.extraPrice +
+                      toppings.reduce((sum, topping) => sum + topping.price, 0)
+                    : 0;
                 return (
-                  <article className="checkout-item" key={`${item.productId}-${item.size}-${[...item.toppingIds].sort().join(",")}`}>
+                  <article
+                    className="checkout-item"
+                    key={`${item.productId}-${item.size}-${[...item.toppingIds].sort().join(",")}`}
+                  >
                     <div className="checkout-item-image">
-                      {product?.imageUrl ? <Image src={product.imageUrl} alt="" fill sizes="64px" /> : <span aria-hidden="true">☕</span>}
+                      {product?.imageUrl ? (
+                        <Image
+                          src={product.imageUrl}
+                          alt=""
+                          fill
+                          sizes="64px"
+                        />
+                      ) : (
+                        <span aria-hidden="true">☕</span>
+                      )}
                     </div>
-                    <div className="checkout-item-copy"><strong>{product?.name ?? "Món không khả dụng"} <span>× {item.quantity}</span></strong><p>Size {item.size}{toppings.length > 0 ? ` · ${toppings.map((topping) => topping.name).join(", ")}` : ""}</p>{item.note && <small>Ghi chú: {item.note}</small>}</div>
-                    <strong className="checkout-item-price">{formatCurrency(unitPrice * item.quantity)}</strong>
+                    <div className="checkout-item-copy">
+                      <strong>
+                        {product?.name ?? "Món không khả dụng"}{" "}
+                        <span>× {item.quantity}</span>
+                      </strong>
+                      <p>
+                        Size {item.size}
+                        {toppings.length > 0
+                          ? ` · ${toppings.map((topping) => topping.name).join(", ")}`
+                          : ""}
+                      </p>
+                      {item.note && <small>Ghi chú: {item.note}</small>}
+                    </div>
+                    <strong className="checkout-item-price">
+                      {formatCurrency(unitPrice * item.quantity)}
+                    </strong>
                   </article>
                 );
               })}
             </div>
-            <Link href="/cart" className="edit-cart-link">Chỉnh sửa giỏ hàng</Link>
+            <Link href="/cart" className="edit-cart-link">
+              Chỉnh sửa giỏ hàng
+            </Link>
           </section>
 
           <div className="checkout-promotion">
             <PromotionInput
               subtotal={subtotal}
-              discount={promotionDiscount}
-              total={subtotal - promotionDiscount}
+              discount={0}
+              total={subtotal}
               appliedCode={promotionCode || undefined}
-              error={promotionError}
-              isApplying={applyingPromotion}
-              onApplyCode={applyPromotion}
-              onClearPromotion={clearPromotion}
+              onApplyCode={(code) => {
+                setPromotionCode(code);
+                setError("");
+              }}
+              onClearPromotion={() => setPromotionCode("")}
             />
-            <p className="promotion-disclaimer">Mức giảm trên đây là tạm tính; máy chủ sẽ kiểm tra lại mã và tính tổng chính thức khi tạo đơn.</p>
+            <p className="promotion-disclaimer">
+              Mã sẽ được máy chủ kiểm tra khi tạo đơn. Mức giảm chính thức hiển
+              thị sau khi đơn được tạo.
+            </p>
           </div>
         </div>
 
         <aside className="order-summary checkout-summary">
           <h2>Tổng kết đơn hàng</h2>
-          <div className="summary-row"><span>Tạm tính</span><strong>{formatCurrency(subtotal)}</strong></div>
-          <div className="summary-row summary-muted"><span>Nhận tại quầy</span><span>Miễn phí</span></div>
-          <div className="summary-row"><span>Giảm giá</span><strong>-{formatCurrency(promotionDiscount)}</strong></div>
-          <div className="summary-total"><span>Tổng tạm tính</span><strong>{formatCurrency(subtotal - promotionDiscount)}</strong></div>
-          <p className="summary-note">Giá có thể thay đổi theo dữ liệu mới nhất. Máy chủ sẽ tính lại giá và tồn kho trước khi tạo đơn.</p>
-          {!session && <p className="login-reminder">Bạn cần đăng nhập để đặt hàng. Giỏ hàng sẽ được giữ nguyên khi quay lại.</p>}
-          <button className="primary-button summary-button" type="button" onClick={submitOrder} disabled={submitting || applyingPromotion || unavailable.length > 0}>
-            {submitting ? "Đang tạo đơn…" : session ? "Xác nhận đặt hàng" : "Đăng nhập để tiếp tục"}
+          <div className="summary-row">
+            <span>Tạm tính</span>
+            <strong>{formatCurrency(subtotal)}</strong>
+          </div>
+          <div className="summary-row summary-muted">
+            <span>Nhận tại quầy</span>
+            <span>Miễn phí</span>
+          </div>
+          <div className="summary-total">
+            <span>Tổng tạm tính</span>
+            <strong>{formatCurrency(subtotal)}</strong>
+          </div>
+          <p className="summary-note">
+            Giá có thể thay đổi theo dữ liệu mới nhất. Máy chủ sẽ tính lại giá
+            và tồn kho trước khi tạo đơn.
+          </p>
+          {!session && (
+            <p className="login-reminder">
+              Bạn cần đăng nhập để đặt hàng. Giỏ hàng sẽ được giữ nguyên khi
+              quay lại.
+            </p>
+          )}
+          <button
+            className="primary-button summary-button"
+            type="button"
+            onClick={submitOrder}
+            disabled={submitting || unavailable.length > 0}
+          >
+            {submitting
+              ? "Đang tạo đơn…"
+              : session
+                ? "Xác nhận đặt hàng"
+                : "Đăng nhập để tiếp tục"}
             {!submitting && <span aria-hidden="true">→</span>}
           </button>
-          {!session && <Link className="checkout-register-link" href="/register?returnUrl=%2Fcheckout">Chưa có tài khoản? Đăng ký</Link>}
-          <p className="checkout-terms">Bằng cách đặt hàng, bạn đồng ý để BrewLite xử lý đơn theo thông tin đã xác nhận.</p>
+          {!session && (
+            <Link
+              className="checkout-register-link"
+              href="/register?returnUrl=%2Fcheckout"
+            >
+              Chưa có tài khoản? Đăng ký
+            </Link>
+          )}
+          <p className="checkout-terms">
+            Bằng cách đặt hàng, bạn đồng ý để BrewLite xử lý đơn theo thông tin
+            đã xác nhận.
+          </p>
         </aside>
       </div>
     </section>

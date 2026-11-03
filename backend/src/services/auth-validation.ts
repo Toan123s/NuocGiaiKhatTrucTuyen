@@ -1,6 +1,6 @@
 // TV3 — Kiểm tra dữ liệu đăng ký/đăng nhập. Hàm thuần, không đụng DB. Quy tắc phải khớp src/features/auth/validation.ts phía web.
 import { BadRequestException } from "@nestjs/common";
-import type { LoginInput, RegisterInput } from "../types/contracts";
+import type { LoginInput, RegisterInput } from "../types/contracts.js";
 export const PASSWORD_MIN_LENGTH = 8;
 // bcrypt chỉ dùng 72 byte đầu; chặn sớm để mật khẩu dài không bị cắt âm thầm.
 export const PASSWORD_MAX_BYTES = 72;

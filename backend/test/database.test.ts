@@ -3,9 +3,11 @@
 import { PGlite } from "@electric-sql/pglite";
 import { compareSync } from "bcryptjs";
 import { readFileSync } from "node:fs";
-import { resolve } from "node:path";
+import { dirname, resolve } from "node:path";
 import assert from "node:assert/strict";
 import { before, after, test } from "node:test";
+import { fileURLToPath } from "node:url";
+const __dirname = dirname(fileURLToPath(import.meta.url));
 const db = new PGlite();
 const sql = (name: string) =>
   readFileSync(resolve(__dirname, "../database", name), "utf8");

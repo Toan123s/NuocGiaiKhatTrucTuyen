@@ -3,11 +3,12 @@ import assert from "node:assert/strict";
 import { after, before, test } from "node:test";
 import type { INestApplication } from "@nestjs/common";
 import { NestFactory } from "@nestjs/core";
-import { AppModule } from "../src/app.module";
-import { ProductsService } from "../src/services/products.service";
-import { ProductModel } from "../src/models/product.model";
-import { DatabaseService } from "../src/config/db";
-import { sign } from "jsonwebtoken";
+import { AppModule } from "../src/app.module.js";
+import { ProductsService } from "../src/services/products.service.js";
+import { ProductModel } from "../src/models/product.model.js";
+import { DatabaseService } from "../src/config/db.js";
+import jsonwebtoken from "jsonwebtoken";
+const { sign } = jsonwebtoken;
 let app: INestApplication;
 let origin: string;
 
@@ -54,11 +55,13 @@ test("health không giả vờ đã kiểm tra DB trong sample mode", async () =
     database: "not-checked",
   });
 });
-test("API bảo vệ đơn hàng và chưa nhận thanh toán giả", async () => {
+test("API bảo vệ đơn hàng và thanh toán bằng xác thực", async () => {
   const ordersResponse = await fetch(`${origin}/orders`, { method: "POST" });
   assert.equal(ordersResponse.status, 401);
-  const paymentsResponse = await fetch(`${origin}/payments`, { method: "POST" });
-  assert.equal(paymentsResponse.status, 501);
+  const paymentsResponse = await fetch(`${origin}/payments`, {
+    method: "POST",
+  });
+  assert.equal(paymentsResponse.status, 401);
   const productResponse = await fetch(`${origin}/products/abc`);
   assert.equal(productResponse.status, 404);
 });
@@ -72,7 +75,8 @@ function postJson(path: string, body: unknown) {
 test("auth: kiểm tra dữ liệu trước (400), sample mode không giả lập tài khoản (503)", async () => {
   assert.equal((await postJson("/auth/login", {})).status, 400);
   assert.equal(
-    (await postJson("/auth/register", { email: "a@b.co", password: "ngan" })).status,
+    (await postJson("/auth/register", { email: "a@b.co", password: "ngan" }))
+      .status,
     400,
   );
   const body = await (await postJson("/auth/login", {})).json();
@@ -80,7 +84,8 @@ test("auth: kiểm tra dữ liệu trước (400), sample mode không giả lậ
   assert.ok(body.errors.email && body.errors.password);
   for (const path of ["/auth/login", "/auth/register"])
     assert.equal(
-      (await postJson(path, { email: "a@b.co", password: "BrewLite123!" })).status,
+      (await postJson(path, { email: "a@b.co", password: "BrewLite123!" }))
+        .status,
       503,
       path,
     );

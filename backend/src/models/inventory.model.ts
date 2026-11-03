@@ -1,9 +1,9 @@
 // TV4 — Model Inventory: nơi viết SQL đọc/sửa tồn kho (cột stock, version của products).
 // Không tự mở transaction; chỉ dùng PoolClient do service truyền vào.
 import { ConflictException, Injectable } from "@nestjs/common";
-import type { StockSnapshot } from "../types/order.types";
-import type { PoolClient } from "../types/contracts";
-import type { OrderLine } from "../types/contracts";
+import type { StockSnapshot } from "../types/order.types.js";
+import type { PoolClient } from "../types/contracts.js";
+import type { OrderLine } from "../types/contracts.js";
 
 @Injectable()
 export class InventoryModel {
@@ -107,11 +107,11 @@ export class InventoryModel {
     );
     const ingredientResult = schema.rows[0]?.exists
       ? await transaction.query(
-      `UPDATE ingredients i
+          `UPDATE ingredients i
        SET stock = i.stock + r.quantity, version = i.version + 1
        FROM order_ingredient_reservations r
        WHERE r.order_id = $1 AND r.ingredient_id = i.id`,
-      [orderId],
+          [orderId],
         )
       : { rowCount: 0 };
     if (ingredientResult.rowCount && ingredientResult.rowCount > 0) {

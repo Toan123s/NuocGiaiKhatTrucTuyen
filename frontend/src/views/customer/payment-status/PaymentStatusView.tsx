@@ -9,10 +9,7 @@ import { useSearchParams } from "next/navigation";
 import { usePaymentOutcome } from "@/features/orders/use-payment-outcome";
 import { formatVnd, shortOrderId } from "@/features/orders/order-format";
 import { CartStore } from "@/features/cart/cart.store";
-import {
-  FailureBlock,
-  LoadingBlock,
-} from "@/components/orders/OrderBlocks";
+import { FailureBlock, LoadingBlock } from "@/components/orders/OrderBlocks";
 import "@/components/orders/orders.css";
 
 // Chỉ gọi khi kết quả chính thức là PAID. CartStore (TV2) lưu giỏ ở localStorage và tự báo cho header cập nhật,

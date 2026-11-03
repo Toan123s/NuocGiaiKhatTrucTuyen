@@ -1,4 +1,4 @@
-import { AUTH_ROUTES } from "../../routes/auth.routes";
+import { AUTH_ROUTES } from "../../routes/auth.routes.js";
 // TV3 — POST /auth/register, POST /auth/login, GET /auth/me. Controller chỉ nhận request và gọi service, không chứa nghiệp vụ.
 import {
   Body,
@@ -9,11 +9,11 @@ import {
   Post,
   UseGuards,
 } from "@nestjs/common";
-import { CurrentUser } from "../../guards/current-user.decorator";
-import { JwtAuthGuard } from "../../guards/jwt-auth.guard";
-import { AuthService } from "../../services/auth.service";
-import { UsersService } from "../../services/users.service";
-import type { AuthenticatedUser } from "../../types/auth.types";
+import { CurrentUser } from "../../guards/current-user.decorator.js";
+import { JwtAuthGuard } from "../../guards/jwt-auth.guard.js";
+import { AuthService } from "../../services/auth.service.js";
+import { UsersService } from "../../services/users.service.js";
+import type { AuthenticatedUser } from "../../types/auth.types.js";
 @Controller(AUTH_ROUTES.base)
 export class AuthController {
   constructor(
