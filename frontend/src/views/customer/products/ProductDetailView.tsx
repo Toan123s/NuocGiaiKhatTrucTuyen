@@ -5,6 +5,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { cartStore } from "@/features/cart/cart.store";
 import { Product } from "@/types/product";
+import { ApiError, apiRequest } from "@/lib/api-client";
 
 interface ProductDetailViewProps {
   product: Product;
@@ -22,6 +23,7 @@ export function ProductDetailView({ product }: ProductDetailViewProps) {
     show: boolean;
     message: string;
     details: string;
+    canViewCart: boolean;
   } | null>(null);
 
   // Tính giá hiển thị dựa trên size và topping
@@ -40,7 +42,7 @@ export function ProductDetailView({ product }: ProductDetailViewProps) {
     );
   };
 
-  const handleAddToCart = () => {
+  const handleAddToCart = async () => {
     const cartItem = {
       productId: product.id,
       size: selectedSize,
@@ -48,7 +50,26 @@ export function ProductDetailView({ product }: ProductDetailViewProps) {
       quantity: 1,
       note: note.trim(),
     };
-    cartStore.addItem(cartItem);
+    try {
+      await apiRequest(`/products/${encodeURIComponent(product.id)}/check-stock`, {
+        method: "POST",
+        body: { size: selectedSize, toppingIds: selectedToppings },
+      });
+      cartStore.addItem(cartItem);
+    } catch (error) {
+      setToast({
+        show: true,
+        message:
+          error instanceof ApiError
+            ? error.message === "Sản phẩm hoặc topping chưa có công thức nguyên liệu"
+              ? error.message
+              : "Nguyên liệu không đủ"
+            : "Nguyên liệu món này không đủ.",
+        details: "Vui lòng chọn món hoặc topping khác.",
+        canViewCart: false,
+      });
+      return;
+    }
 
     const toppingNames = (product.toppings ?? [])
       .filter((t) => selectedToppings.includes(t.id))
@@ -63,6 +84,7 @@ export function ProductDetailView({ product }: ProductDetailViewProps) {
       show: true,
       message: `Đã thêm ${product.name} vào giỏ hàng!`,
       details,
+      canViewCart: true,
     });
 
     // Tự động đóng sau 4 giây
@@ -76,15 +98,17 @@ export function ProductDetailView({ product }: ProductDetailViewProps) {
     <div className="container">
       {toast?.show && (
         <div className="alert toast-notification" role="status">
-          <div className="toast-icon">✓</div>
+          <div className="toast-icon">{toast.canViewCart ? "✓" : "!"}</div>
           <div className="toast-body">
             <h4 className="toast-title">{toast.message}</h4>
             <p className="toast-desc">{toast.details}</p>
           </div>
           <div className="toast-actions">
-            <Link href="/cart" className="toast-cart-btn">
-              Xem giỏ hàng
-            </Link>
+            {toast.canViewCart && (
+              <Link href="/cart" className="toast-cart-btn">
+                Xem giỏ hàng
+              </Link>
+            )}
             <button
               type="button"
               className="toast-close-btn"

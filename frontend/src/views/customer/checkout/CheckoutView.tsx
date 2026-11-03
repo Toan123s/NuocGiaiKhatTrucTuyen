@@ -18,6 +18,12 @@ interface CreatedOrder {
   total: number;
 }
 
+interface PromotionPreview {
+  code: string;
+  discount: number;
+  total: number;
+}
+
 const money = new Intl.NumberFormat("vi-VN");
 const formatCurrency = (value: number) => `${money.format(value)} đ`;
 
@@ -26,6 +32,9 @@ export function CheckoutView() {
   const [items, setItems] = useState<CartItem[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
   const [promotionCode, setPromotionCode] = useState("");
+  const [promotionPreview, setPromotionPreview] =
+    useState<PromotionPreview | null>(null);
+  const [promotionError, setPromotionError] = useState("");
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
@@ -54,6 +63,8 @@ export function CheckoutView() {
   const unavailable = items.filter(
     (item) => !products.some((product) => product.id === item.productId),
   );
+  const discount = promotionPreview?.discount ?? 0;
+  const total = promotionPreview?.total ?? subtotal;
 
   const submitOrder = async () => {
     if (submitting || items.length === 0 || loading || unavailable.length > 0)
@@ -281,14 +292,39 @@ export function CheckoutView() {
           <div className="checkout-promotion">
             <PromotionInput
               subtotal={subtotal}
-              discount={0}
-              total={subtotal}
+              discount={discount}
+              total={total}
               appliedCode={promotionCode || undefined}
-              onApplyCode={(code) => {
-                setPromotionCode(code);
-                setError("");
+              error={promotionError || undefined}
+              onApplyCode={async (code) => {
+                try {
+                  const preview =
+                    await authorizedRequest<PromotionPreview>(
+                      "/orders/validate-promotion",
+                      {
+                    method: "POST",
+                    body: { code, subtotal },
+                      },
+                    );
+                  setPromotionCode(code);
+                  setPromotionPreview(preview);
+                  setPromotionError("");
+                  setError("");
+                } catch (requestError) {
+                  setPromotionCode("");
+                  setPromotionPreview(null);
+                  setPromotionError(
+                    requestError instanceof ApiError
+                      ? requestError.message
+                      : "Mã khuyến mãi không hợp lệ.",
+                  );
+                }
               }}
-              onClearPromotion={() => setPromotionCode("")}
+              onClearPromotion={() => {
+                setPromotionCode("");
+                setPromotionPreview(null);
+                setPromotionError("");
+              }}
             />
             <p className="promotion-disclaimer">
               Mã sẽ được máy chủ kiểm tra khi tạo đơn. Mức giảm chính thức hiển
@@ -309,7 +345,7 @@ export function CheckoutView() {
           </div>
           <div className="summary-total">
             <span>Tổng tạm tính</span>
-            <strong>{formatCurrency(subtotal)}</strong>
+            <strong>{formatCurrency(total)}</strong>
           </div>
           <p className="summary-note">
             Giá có thể thay đổi theo dữ liệu mới nhất. Máy chủ sẽ tính lại giá

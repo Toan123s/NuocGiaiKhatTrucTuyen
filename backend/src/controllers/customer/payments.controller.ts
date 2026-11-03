@@ -5,6 +5,7 @@ import {
   Controller,
   Get,
   Headers,
+  Inject,
   Param,
   Post,
   Req,
@@ -39,7 +40,9 @@ function currentUserId(request: AuthenticatedRequest): string {
 @UseGuards(JwtAuthGuard)
 @Controller(CUSTOMER_ROUTES.payments.base)
 export class PaymentsController {
-  constructor(private readonly payments: PaymentsService) {}
+  constructor(
+    @Inject(PaymentsService) private readonly payments: PaymentsService,
+  ) {}
 
   @Post(CUSTOMER_ROUTES.payments.create)
   createPayment(

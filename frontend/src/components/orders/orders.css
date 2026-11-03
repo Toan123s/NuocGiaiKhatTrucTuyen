@@ -1,7 +1,7 @@
 /* TV6 — Style riêng cho trang đơn hàng. Tiền tố ord- để không đụng globals.css của TV1. */
 .ord-page {
   padding-block: 40px 64px;
-  max-width: 760px;
+  max-width: 100%;
 }
 .ord-page > h1 {
   margin: 0 0 6px;
@@ -123,7 +123,31 @@
 }
 .ord-actions .primary-button,
 .ord-actions .outline-button {
+  flex: 1 1 0;
   min-height: 44px;
+  text-align: center;
+}
+.mobile-shell .pay-panel {
+  width: 100%;
+  padding: 18px 14px;
+}
+.mobile-shell .pay-qr {
+  width: 100%;
+  max-width: 340px;
+  padding: 12px;
+}
+.mobile-shell .pay-qr-image {
+  width: min(100%, 280px);
+  height: auto;
+  aspect-ratio: 1;
+}
+.mobile-shell .ord-actions {
+  width: 100%;
+  margin-top: 16px;
+}
+.mobile-shell .ord-actions > * {
+  min-width: 0;
+  white-space: normal;
 }
 .ord-danger {
   border-color: #c9766d;

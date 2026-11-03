@@ -13,15 +13,15 @@ import {
   ConfigurationError,
   passwordResetConfig,
   type PasswordResetConfig,
-} from "../config/environment";
+} from "../config/environment.js";
 import {
   parseForgotPasswordInput,
   parseResetPasswordInput,
   RESET_TOKEN_PATTERN,
-} from "./auth-validation";
-import { BCRYPT_ROUNDS } from "./auth.service";
-import { Mailer } from "./mailer";
-import { UsersService } from "./users.service";
+} from "./auth-validation.js";
+import { BCRYPT_ROUNDS } from "./auth.service.js";
+import { Mailer } from "./mailer.js";
+import { UsersService } from "./users.service.js";
 // Luôn trả đúng một thông báo này dù email có tồn tại hay không, để không lộ email nào đã đăng ký.
 export const FORGOT_PASSWORD_MESSAGE =
   "Nếu email này đã đăng ký, chúng tôi đã gửi hướng dẫn đặt lại mật khẩu. Hãy kiểm tra hộp thư (cả thư rác).";

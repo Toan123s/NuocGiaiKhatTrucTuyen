@@ -1,5 +1,5 @@
 // TV1 — Model chứa SQL cho sản phẩm. Seed dùng chung cho DB và chế độ sample.
-import { Inject, Injectable } from "@nestjs/common";
+import { ConflictException, Inject, Injectable } from "@nestjs/common";
 import { readFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -16,6 +16,40 @@ const unavailableProductIds = new Set([
 @Injectable()
 export class ProductModel {
   constructor(@Inject(DatabaseService) private readonly db: DatabaseService) {}
+  async checkStock(
+    productId: string,
+    size: string,
+    toppingIds: string[],
+    quantity: number,
+  ): Promise<void> {
+    const result = await this.db.query<{ name: string; stock: number; required: number }>(
+      `WITH requested AS (
+         SELECT $1::text AS product_id, $2::text AS size, $3::jsonb AS topping_ids, $4::int AS line_quantity
+       ), recipe_rows AS (
+         SELECT i.name, i.stock, r.quantity * q.line_quantity AS required
+         FROM requested q JOIN product_recipes r ON r.product_id=q.product_id AND r.size=q.size
+         JOIN ingredients i ON i.id=r.ingredient_id
+         UNION ALL
+         SELECT i.name, i.stock, r.quantity * q.line_quantity
+         FROM requested q CROSS JOIN LATERAL jsonb_array_elements_text(q.topping_ids) t
+         JOIN topping_recipes r ON r.product_id=q.product_id AND r.topping_id=t
+         JOIN ingredients i ON i.id=r.ingredient_id
+       )
+       SELECT name, stock, SUM(required)::int AS required
+       FROM recipe_rows GROUP BY name, stock`,
+      [productId, size, JSON.stringify(toppingIds), quantity],
+    );
+    if (result.rows.length === 0) {
+      throw new ConflictException(
+        "Sản phẩm hoặc topping chưa có công thức nguyên liệu",
+      );
+    }
+
+    const unavailable = result.rows.find((row) => row.stock < row.required);
+    if (unavailable) {
+      throw new ConflictException("Nguyên liệu không đủ");
+    }
+  }
   async findAll(): Promise<Product[]> {
     if (dataSource() === "sample") {
       const products = JSON.parse(

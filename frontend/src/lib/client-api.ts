@@ -99,6 +99,20 @@ export function cancelOrder(orderId: string): Promise<unknown> {
   });
 }
 
+export function retryOrderPayment(orderId: string): Promise<unknown> {
+  return request<unknown>(
+    `/orders/${encodeURIComponent(orderId)}/retry-payment`,
+    { method: "POST" },
+  );
+}
+
+export function reconcilePayment(paymentId: string): Promise<unknown> {
+  return request<unknown>(
+    `/payments/${encodeURIComponent(paymentId)}/reconcile`,
+    { method: "POST" },
+  );
+}
+
 /** Thông báo thân thiện cho người dùng; không lộ chi tiết lỗi máy chủ. */
 export function describeError(error: unknown): string {
   if (error instanceof ApiError) {
