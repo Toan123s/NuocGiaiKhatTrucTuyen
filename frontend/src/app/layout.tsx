@@ -13,7 +13,9 @@ export default function RootLayout({
   return (
     <html lang="vi">
       <body>
-        <CustomerLayout>{children}</CustomerLayout>
+        <div className="mobile-shell">
+          <CustomerLayout>{children}</CustomerLayout>
+        </div>
       </body>
     </html>
   );

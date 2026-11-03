@@ -43,6 +43,17 @@ function PaymentContent() {
   const [error, setError] = useState("");
   const [isProcessing, setIsProcessing] = useState(false);
   const [selectedMethod, setSelectedMethod] = useState<"WALLET" | "CARD">("WALLET");
+  const qrBankId = process.env.NEXT_PUBLIC_VIETQR_BANK_ID ?? "970426";
+  const qrAccountNo =
+    process.env.NEXT_PUBLIC_VIETQR_ACCOUNT_NO ?? "SBSEPAY354HYTS9068D";
+  const qrAccountName =
+    process.env.NEXT_PUBLIC_VIETQR_ACCOUNT_NAME ?? "BREWLITE";
+  const transferDescription = order
+    ? `BREWLITE-ORDER-${order.id}`
+    : "";
+  const qrUrl = order
+    ? `https://img.vietqr.io/image/${qrBankId}-${qrAccountNo}-compact2.png?amount=${order.total}&addInfo=${encodeURIComponent(transferDescription)}&accountName=${encodeURIComponent(qrAccountName)}`
+    : null;
 
   useEffect(() => {
     if (!orderId) {
@@ -166,10 +177,15 @@ function PaymentContent() {
 
         {error && <p className="pay-note" style={{ color: 'red' }} role="alert">{error}</p>}
 
-        <p className="pay-note">
-          Hệ thống sử dụng cổng thanh toán mô phỏng.
-          Giao dịch sẽ được xử lý trong giây lát.
-        </p>
+        {qrUrl && (
+          <div className="pay-qr">
+            <h3>Quét mã QR để chuyển khoản</h3>
+            <img className="pay-qr-image" src={qrUrl} alt="Mã QR chuyển khoản VietQR" />
+            <p>
+              Nội dung chuyển khoản: <strong>{transferDescription}</strong>
+            </p>
+          </div>
+        )}
       </div>
 
       <div className="ord-actions">

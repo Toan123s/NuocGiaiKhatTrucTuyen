@@ -36,4 +36,7 @@ export class ProductsService {
       );
     }
   }
+  checkStock(productId: string, size: string, toppingIds: string[], quantity: number) {
+    return this.model.checkStock(productId, size, toppingIds, quantity);
+  }
 }

@@ -9,10 +9,11 @@
     "typecheck": "next typegen && tsc --noEmit"
   },
   "dependencies": {
+    "dotenv": "^17.2.0",
     "next": "16.4.2",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
-    "dotenv": "^17.2.0"
+    "uuid": "^14.0.3"
   },
   "devDependencies": {
     "@types/node": "^24.0.0",

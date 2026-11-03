@@ -26,6 +26,8 @@ import { UserModel } from "./models/user.model.js";
 import { OrderModel } from "./models/order.model.js";
 import { PromotionModel } from "./models/promotion.model.js";
 import { InventoryModel } from "./models/inventory.model.js";
+import { PaymentModel } from "./models/payment.model.js";
+import { PaymentsService } from "./services/payments.service.js";
 
 import { SepayController } from "./sepay/sepay.controller.js";
 import { SepayModel } from "./sepay/sepay.model.js";
@@ -66,6 +68,8 @@ import { SepayService } from "./sepay/sepay.services.js";
     LoyaltyModel,       
     LoyaltyService,     
     MockPaymentGateway,
+    PaymentModel,
+    PaymentsService,
   ]
 })
 export class AppModule {}

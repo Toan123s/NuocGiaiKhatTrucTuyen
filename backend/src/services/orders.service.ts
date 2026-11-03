@@ -4,6 +4,7 @@ import { randomUUID } from "crypto";
 import {
   BadRequestException,
   ConflictException,
+  Inject,
   Injectable,
   NotFoundException,
   NotImplementedException,
@@ -19,11 +20,24 @@ import type { NewOrderItem } from "../types/order.types.js";
 @Injectable()
 export class OrdersService {
   constructor(
-    private readonly db: DatabaseService,
-    private readonly orderModel: OrderModel,
-    private readonly inventoryService: InventoryService,
+    @Inject(DatabaseService) private readonly db: DatabaseService,
+    @Inject(OrderModel) private readonly orderModel: OrderModel,
+    @Inject(InventoryService) private readonly inventoryService: InventoryService,
+    @Inject(PromotionsService)
     private readonly promotionsService: PromotionsService,
   ) {}
+
+  async validatePromotion(code: string, subtotal: number) {
+    const promotion = await this.promotionsService.validatePromotion(
+      code,
+      subtotal,
+    );
+    const discount = await this.promotionsService.calculateDiscount(
+      code,
+      subtotal,
+    );
+    return { code: promotion.code, discount, total: subtotal - discount };
+  }
 
   // TODO TV4: previewOrder (xem giá tạm, không ghi DB). Chưa có route riêng; thống nhất request/response với TV1 và TV2 trước.
   previewOrder(userId: string, input: CreateOrderInput): never {

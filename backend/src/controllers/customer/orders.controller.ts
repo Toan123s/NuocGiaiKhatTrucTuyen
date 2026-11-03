@@ -3,6 +3,7 @@ import {
   BadRequestException,
   Body,
   Controller,
+  Inject,
   Param,
   Post,
   Req,
@@ -75,7 +76,9 @@ function currentUserId(request: AuthenticatedRequest): string {
 @UseGuards(JwtAuthGuard)
 @Controller(CUSTOMER_ROUTES.orders.base)
 export class OrdersController {
-  constructor(private readonly orders: OrdersService) {}
+  constructor(
+    @Inject(OrdersService) private readonly orders: OrdersService,
+  ) {}
 
   @Post(CUSTOMER_ROUTES.orders.create)
   createOrder(@Req() request: AuthenticatedRequest, @Body() body: unknown) {
@@ -83,6 +86,20 @@ export class OrdersController {
       currentUserId(request),
       parseCreateOrderInput(body),
     );
+  }
+
+  @Post(CUSTOMER_ROUTES.orders.validatePromotion)
+  validatePromotion(@Body() body: unknown) {
+    if (
+      typeof body !== "object" ||
+      body === null ||
+      typeof (body as Record<string, unknown>).code !== "string" ||
+      typeof (body as Record<string, unknown>).subtotal !== "number"
+    ) {
+      throw new BadRequestException("Thông tin mã khuyến mãi không hợp lệ");
+    }
+    const value = body as { code: string; subtotal: number };
+    return this.orders.validatePromotion(value.code, value.subtotal);
   }
 
   @Post(CUSTOMER_ROUTES.orders.cancel)

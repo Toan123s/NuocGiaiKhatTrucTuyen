@@ -1,6 +1,7 @@
 // TV4 — Inventory service: logic giữ và hoàn tồn kho. SQL nằm ở InventoryModel.
 import {
   ConflictException,
+  Inject,
   Injectable,
   NotFoundException,
 } from "@nestjs/common";
@@ -10,7 +11,9 @@ import type { OrderLine } from "../types/contracts.js";
 
 @Injectable()
 export class InventoryService {
-  constructor(private readonly inventoryModel: InventoryModel) {}
+  constructor(
+    @Inject(InventoryModel) private readonly inventoryModel: InventoryModel,
+  ) {}
 
   // Gộp số lượng theo productId rồi trừ kho; thiếu hàng/tranh tồn thì ném lỗi để transaction rollback.
   async reserveStock(

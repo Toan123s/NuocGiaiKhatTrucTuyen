@@ -1,5 +1,5 @@
 // TV3 duy trì runner/checksum/transaction; mỗi TV đề xuất migration phần mình. TV1 dùng khi dựng local, TV6 dùng trong CD.
-// SQL 001/002: schema và kiểm tra DB. SQL 003: dữ liệu demo, không tự chạy khi start ứng dụng.
+// SQL 001: schema và các migration nền. SQL 002: dữ liệu demo, không tự chạy khi start ứng dụng.
 import "../src/config/environment.js";
 import { readFileSync, readdirSync } from "node:fs";
 import { dirname, resolve } from "node:path";
@@ -22,21 +22,30 @@ async function main() {
        (name TEXT PRIMARY KEY, checksum TEXT NOT NULL, applied_at TIMESTAMPTZ NOT NULL DEFAULT now())`);
           const directory = resolve(__dirname, "../database");
           const files = readdirSync(directory)
-            .filter(
-              (name) => /^\d{3}_.*\.sql$/.test(name) && name !== "003_seed.sql",
+            .filter((name) =>
+              [
+                "001_schema.sql",
+                "003_catalog.sql",
+                "004_image_urls.sql",
+                "005_recipe_data.sql",
+                "006_recipe_data.sql",
+              ].includes(
+                name,
+              ),
             )
             .sort();
           for (const name of files) {
             if (
-              name === "006_recipe_catalog.sql" ||
-              name === "007_image_urls.sql"
+              name === "003_catalog.sql" ||
+              name === "005_recipe_data.sql" ||
+              name === "006_recipe_data.sql"
             ) {
               const products = await client.query(
                 "SELECT EXISTS (SELECT 1 FROM products) AS has_products",
               );
               if (!products.rows[0].has_products) {
                 console.log(
-                  `Tạm hoãn ${name}: chưa có sản phẩm. Chạy db:seed rồi db:migrate lại.`,
+                  "Tạm hoãn 003_catalog.sql: chưa có sản phẩm. Chạy db:seed rồi db:migrate lại.",
                 );
                 continue;
               }
@@ -64,7 +73,7 @@ async function main() {
         } else {
           await client.query(
             readFileSync(
-              resolve(__dirname, "../database/003_seed.sql"),
+            resolve(__dirname, "../database/002_seed.sql"),
               "utf8",
             ),
           );
@@ -78,10 +87,11 @@ async function main() {
 }
 main().catch((error) => {
   console.error(
-    "Lỗi database. Kiểm tra .env, thứ tự 001/002/003 và quyền tạo bảng.",
+    "Lỗi database. Kiểm tra .env, thứ tự schema/seed và quyền tạo bảng.",
   );
   if (error && typeof error === "object" && "code" in error)
     console.error("Mã lỗi:", error.code);
+  if (error instanceof Error) console.error("Chi tiết:", error.message);
   if (error instanceof Error && error.message.startsWith("Migration đã chạy"))
     console.error(error.message);
   process.exitCode = 1;
