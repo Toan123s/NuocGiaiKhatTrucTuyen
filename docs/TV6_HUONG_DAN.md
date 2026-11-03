@@ -59,3 +59,15 @@ Khi nhóm chốt hosting, workflow CD nên có thứ tự: build image từ Dock
 ## 5. Kiểm tra quyền sở hữu và chuyển trạng thái
 
 Đã có test trong `backend/test/customer-orders.test.ts` và `customer-orders.sql.test.ts` (quy tắc trạng thái, đọc đơn theo user, SQL thật trên PGlite). Chạy bằng `npm test` ở thư mục gốc.
+
+## 6. Trang kết quả thanh toán với luồng SePay
+
+Hiện thanh toán thật chỉ có webhook SePay (`POST /webhooks/sepay`): khi tiền về, backend tạo payment `SUCCEEDED`, đổi đơn sang `PAID` và ghi điểm trong một transaction. Trước lúc đó đơn vẫn `PENDING` và chưa có dòng payment nào, nên trang `/payment-status` coi đó là "đang chờ" và tiếp tục polling `GET /orders/:id` (tối đa 60 giây, 2 giây một lần) thay vì báo ngay "chưa thanh toán". Hết 60 giây thì hiện nút "Kiểm tra lại"; không tự kết luận thất bại.
+
+Thử local khi chưa có trang `/payment` của TV5: tạo đơn qua giao diện, mở `/payment-status?orderId=<mã đơn đầy đủ>`, rồi ở terminal khác chạy:
+
+```sh
+SEPAY_WEBHOOK_API_KEY=<giá trị trong .env của API> node scripts/simulate-sepay.mjs <mã đơn đầy đủ> <tổng tiền>
+```
+
+Tổng tiền phải đúng bằng tổng đơn, nếu không webhook trả 400. Script chỉ chạy với API trên localhost.

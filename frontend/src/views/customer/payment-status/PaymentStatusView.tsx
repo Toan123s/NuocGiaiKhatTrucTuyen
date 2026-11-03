@@ -3,6 +3,7 @@
 // TV5 điều hướng sang đây kèm orderId. Kết quả lấy từ backend (GET /orders/:id, gồm trạng thái đơn + các lần thanh toán),
 // KHÔNG tin tham số status trên URL. Chỉ xóa giỏ khi backend xác nhận đơn đã trả tiền (đúng một lần).
 // Timeout/mất mạng không bị coi là thất bại: đơn và tồn vẫn được giữ, khách có thể kiểm tra lại.
+// Luồng SePay: tiền về qua webhook nên đơn có thể còn PENDING (chưa có giao dịch) một lúc; trang vẫn chờ chứ không báo "chưa thanh toán" ngay.
 import { Suspense, useEffect, useRef } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
@@ -158,18 +159,37 @@ function PaymentStatusContent() {
               </Link>
             </div>
           </>
-        ) : (
+        ) : timedOut ? (
           <>
-            <h1>Đơn chưa được thanh toán</h1>
-            <p>Chưa có giao dịch nào cho đơn này.</p>
+            <h1>Chưa nhận được thanh toán</h1>
+            <p>
+              Hệ thống chưa thấy giao dịch cho đơn này. Nếu bạn đã chuyển khoản,
+              vui lòng chờ thêm rồi bấm “Kiểm tra lại” và không chuyển tiền lần
+              nữa.
+            </p>
             <div className="ord-actions">
-              <Link className="primary-button" href={payHref}>
-                Thanh toán
-              </Link>
+              <button
+                type="button"
+                className="primary-button"
+                onClick={restart}
+              >
+                Kiểm tra lại
+              </button>
               <Link className="outline-button" href={detailHref}>
                 Xem đơn
               </Link>
+              <Link className="outline-button" href={payHref}>
+                Trang thanh toán
+              </Link>
             </div>
+          </>
+        ) : (
+          <>
+            <h1>Đang chờ xác nhận thanh toán</h1>
+            <p>
+              Đang chờ ngân hàng xác nhận chuyển khoản. Vui lòng không đóng
+              trang này và không chuyển tiền lần nữa…
+            </p>
           </>
         )}
       </div>
