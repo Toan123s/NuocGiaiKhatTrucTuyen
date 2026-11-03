@@ -8,6 +8,12 @@ export const CUSTOMER_ROUTES = {
     mine: "me",
     detail: ":id",
     cancel: ":id/cancel",
+    retryPayment: ":id/retry-payment",
   },
-  payments: { base: "payments", create: "", status: ":id" },
+  payments: {
+    base: "payments",
+    create: "",
+    status: ":id",
+    reconcile: ":id/reconcile",
+  },
 } as const;

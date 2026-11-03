@@ -6,7 +6,7 @@ import {
   NotFoundException,
   ServiceUnavailableException,
 } from "@nestjs/common";
-import { ProductModel } from "../models/product.model";
+import { ProductModel } from "../models/product.model.js";
 @Injectable()
 export class ProductsService {
   constructor(@Inject(ProductModel) private readonly model: ProductModel) {}

@@ -1,32 +1,39 @@
 // TV3 điều phối file dùng chung.
 import { Module } from "@nestjs/common";
-import { DatabaseService } from "./config/db";
+import { DatabaseService } from "./config/db.js";
 
-import { ProductsController } from "./controllers/customer/products.controller";
-import { HealthController } from "./controllers/system/health.controller";
-import { AuthController } from "./controllers/auth/auth.controller";
-import { OrdersController } from "./controllers/customer/orders.controller";
-import { PaymentsController } from "./controllers/customer/payments.controller";
-import { CustomerOrdersController } from "./controllers/customer/customer-orders.controller";
+import { ProductsController } from "./controllers/customer/products.controller.js";
+import { HealthController } from "./controllers/system/health.controller.js";
+import { AuthController } from "./controllers/auth/auth.controller.js";
+import { OrdersController } from "./controllers/customer/orders.controller.js";
+import { PaymentsController } from "./controllers/customer/payments.controller.js";
+import { CustomerOrdersController } from "./controllers/customer/customer-orders.controller.js";
 
-import { ProductsService } from "./services/products.service";
-import { OrdersService } from "./services/orders.service";
-import { UsersService } from "./services/users.service";
-import { AuthService } from "./services/auth.service";
-import { PromotionsService } from "./services/promotions.service";
-import { InventoryService } from "./services/inventory.service";
-import { CustomerOrdersService } from "./services/customer-orders.service";
-import { OrderStateService } from "./services/order-state.service";
-import { ProductModel } from "./models/product.model";
-import { UserModel } from "./models/user.model";
-import { OrderModel } from "./models/order.model";
-import { PromotionModel } from "./models/promotion.model";
-import { InventoryModel } from "./models/inventory.model";
-import { CustomerOrderModel } from "./models/customer-order.model";
+import { ProductsService } from "./services/products.service.js";
+import { OrdersService } from "./services/orders.service.js";
+import { UsersService } from "./services/users.service.js";
+import { AuthService } from "./services/auth.service.js";
+import { PromotionsService } from "./services/promotions.service.js";
+import { InventoryService } from "./services/inventory.service.js";
+import { CustomerOrdersService } from "./services/customer-orders.service.js";
+import { OrderStateService } from "./services/order-state.service.js";
+import { PaymentsService } from "./services/payments.service.js";
+import { LoyaltyService } from "./services/loyalty.service.js"; // TV5 thêm
 
-import { SepayController } from "./sepay/sepay.controller";
-import { SepayModel } from "./sepay/sepay.model";
-import { SepayService } from "./sepay/sepay.services";
+import { ProductModel } from "./models/product.model.js";
+import { UserModel } from "./models/user.model.js";
+import { OrderModel } from "./models/order.model.js";
+import { PromotionModel } from "./models/promotion.model.js";
+import { InventoryModel } from "./models/inventory.model.js";
+import { CustomerOrderModel } from "./models/customer-order.model.js";
+import { PaymentModel } from "./models/payment.model.js";
+import { LoyaltyModel } from "./models/loyalty.model.js"; // TV5 thêm
+
+import { MockPaymentGateway } from "./gateways/mock-payment.gateway.js"; // TV5 thêm
+
+import { SepayController } from "./sepay/sepay.controller.js";
+import { SepayModel } from "./sepay/sepay.model.js";
+import { SepayService } from "./sepay/sepay.services.js";
 
 @Module({
   controllers: [
@@ -56,6 +63,11 @@ import { SepayService } from "./sepay/sepay.services";
     CustomerOrdersService,
     CustomerOrderModel,
     OrderStateService,
+    PaymentModel,
+    PaymentsService,
+    LoyaltyModel,       // TV5 đăng ký provider
+    LoyaltyService,     // TV5 đăng ký provider
+    MockPaymentGateway, // TV5 đăng ký provider
   ],
 })
 export class AppModule {}

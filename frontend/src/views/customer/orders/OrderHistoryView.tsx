@@ -113,9 +113,7 @@ export function OrderHistoryView() {
                       {formatDateTime(order.createdAt)} · {order.itemCount} món
                     </div>
                   </div>
-                  <div className="ord-card-total">
-                    {formatVnd(order.total)}
-                  </div>
+                  <div className="ord-card-total">{formatVnd(order.total)}</div>
                   <div>
                     <StatusBadge status={order.status} />
                   </div>

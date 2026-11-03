@@ -8,6 +8,7 @@ import {
   ApiError,
   fetchOrderDetail,
   isAbortError,
+  reconcilePayment,
   toFailure,
   type LoadFailure,
 } from "@/lib/client-api";
@@ -46,8 +47,15 @@ export function usePaymentOutcome(orderId: string | null) {
 
     const tick = async () => {
       try {
-        const order = await fetchOrderDetail(orderId, controller.signal);
+        let order = await fetchOrderDetail(orderId, controller.signal);
         if (controller.signal.aborted) return;
+        const latestPayment = order.payments[0];
+        if (latestPayment?.status === "PROCESSING") {
+          await reconcilePayment(latestPayment.id);
+          if (controller.signal.aborted) return;
+          order = await fetchOrderDetail(orderId, controller.signal);
+          if (controller.signal.aborted) return;
+        }
         failures = 0;
         const outcome = derivePaymentOutcome(order);
         if (!isStillWaiting(outcome)) {

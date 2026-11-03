@@ -1,4 +1,4 @@
-import { CUSTOMER_ROUTES } from "../../routes/customer.routes";
+import { CUSTOMER_ROUTES } from "../../routes/customer.routes.js";
 // TV1 — GET /products đã chạy; detail để TODO theo phạm vi bộ khung.
 import {
   BadRequestException,
@@ -7,7 +7,7 @@ import {
   Get,
   Param,
 } from "@nestjs/common";
-import { ProductsService } from "../../services/products.service";
+import { ProductsService } from "../../services/products.service.js";
 @Controller(CUSTOMER_ROUTES.products.base)
 export class ProductsController {
   constructor(

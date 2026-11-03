@@ -6,7 +6,7 @@ Phân công hiện hành đã cân lại: TV1 nhận khuyến mãi và Docker lo
 
 Đã có menu/tìm kiếm/lọc, API danh sách sản phẩm, khung ảnh và cách gắn imageUrl. Database 001/002/003 đã có schema, kiểm tra và dữ liệu mẫu; runner migrate/seed, 16 test, health và CI typecheck/test/build đã có. Đây không phải công việc cần viết lại từ đầu.
 
-Chi tiết món, Auth, Cart, Checkout, Payment và lịch sử/kết quả vẫn là khung TODO. PromotionInput mới là file khung chưa gắn vào trang. Docker hiện chỉ chạy DB; Docker web/API, lint/required checks, CD và E2E nghiệp vụ cần hoàn thiện. Không có trang Admin/nhân viên.
+Auth, Cart, Checkout và lịch sử/chi tiết đơn đã có luồng chính; Payment vẫn là khung TODO. PromotionInput đã được gắn vào Checkout nhưng backend mới xác nhận mã khi tạo đơn. Docker hiện chỉ chạy DB; Docker web/API, lint/required checks, CD và E2E nghiệp vụ cần hoàn thiện. Không có trang Admin/nhân viên.
 
 Các đường dẫn frontend rút gọn `views/`, `features/`, `components/`, `app/` tính từ `frontend/src/`; backend rút gọn `services/`, `models/`, `controllers/`, `routes/`, `config/` tính từ `backend/src/`. Các file Docker, README và workflows dùng đường dẫn từ gốc repo.
 
@@ -31,7 +31,7 @@ Các đường dẫn frontend rút gọn `views/`, `features/`, `components/`, `
 
 - Hoàn thiện getProductDetail/findById; loadProduct, selectSize, toggleTopping, calculateDisplayPrice và addToCart qua CartStore TV2. Không viết giỏ riêng.
 - Hoàn thiện validatePromotion/findByCode/calculateDiscount: active, thời hạn, minimum_amount, PERCENT/FIXED; giảm không vượt subtotal. Chuẩn hóa code và làm tròn tiền thống nhất với TV4.
-- Hoàn thiện PromotionInput: handleCodeChange, handleApplyCode, clearPromotion. TV2 gắn vào giỏ/checkout, TV4 tính lại chính thức trong backend. Hiện chưa có API preview riêng; phải thống nhất contract trước khi thêm, không gọi service NestJS trực tiếp từ browser.
+- PromotionInput kiểm tra mã qua `POST /promotions/validate` trước khi hiển thị đã áp dụng; endpoint chỉ trả tổng xem trước từ subtotal gửi lên. TV4 vẫn tính lại giá, điều kiện mã và mức giảm từ DB trong `POST /orders`; không tin tổng từ preview và không gọi service NestJS trực tiếp từ browser.
 - Docker phải chạy được web + API + DB, volume DB bền vững, host/API URL đúng môi trường; phối hợp env với TV3 và bàn giao image/cổng/health cho TV6.
 - Test menu đủ/rỗng/lỗi, chi tiết 404, size/topping, các mã WELCOME10/HETHAN/CHUADEN/TATMA/MIN100K/GIAMTOIDA/GIAM100 và clone chạy Docker local.
 

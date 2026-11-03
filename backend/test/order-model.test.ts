@@ -2,10 +2,10 @@
 import assert from "node:assert/strict";
 import { after, before, test } from "node:test";
 import type { PGlite } from "@electric-sql/pglite";
-import { OrderModel } from "../src/models/order.model";
-import { InventoryModel } from "../src/models/inventory.model";
-import type { NewOrder, NewOrderItem } from "../src/types/order.types";
-import type { PoolClient } from "../src/types/contracts";
+import { OrderModel } from "../src/models/order.model.js";
+import { InventoryModel } from "../src/models/inventory.model.js";
+import type { NewOrder, NewOrderItem } from "../src/types/order.types.js";
+import type { PoolClient } from "../src/types/contracts.js";
 import {
   PRODUCT_ID,
   UNIT_S,
@@ -14,7 +14,7 @@ import {
   createTestDb,
   makeTx,
   type Tx,
-} from "./tv4-helpers.ts";
+} from "./tv4-helpers.js";
 
 let db: PGlite;
 let tx: Tx;
@@ -29,7 +29,14 @@ after(async () => {
 });
 
 function newOrder(id: string, total = UNIT_S): NewOrder {
-  return { id, userId: USER_ID, subtotal: total, discount: 0, total, promotionId: null };
+  return {
+    id,
+    userId: USER_ID,
+    subtotal: total,
+    discount: 0,
+    total,
+    promotionId: null,
+  };
 }
 
 function newItem(
@@ -58,7 +65,11 @@ async function createPending(id: string) {
   });
 }
 
-async function insertProcessingPayment(c: PoolClient, orderId: string, key: string) {
+async function insertProcessingPayment(
+  c: PoolClient,
+  orderId: string,
+  key: string,
+) {
   await c.query(
     `INSERT INTO payments (id, order_id, idempotency_key, payload_hash, amount, method)
      VALUES ($1, $2, $3, repeat('c', 64), $4, 'CARD')`,
@@ -99,7 +110,11 @@ test("insertOrder + insertOrderItems commit được qua trigger 002", async () 
 test("topping_ids được lưu thành mảng JSONB", async () => {
   await tx(async (c) => {
     await model.insertOrder(newOrder("m-2", 27000), c);
-    await model.insertOrderItems("m-2", [newItem("m-2-i", 27000, 1, ["tc"])], c);
+    await model.insertOrderItems(
+      "m-2",
+      [newItem("m-2-i", 27000, 1, ["tc"])],
+      c,
+    );
   });
   const result = await db.query<{ topping_ids: string[] }>(
     "SELECT topping_ids FROM order_items WHERE order_id = $1",
@@ -153,9 +168,18 @@ test("updateStatus chỉ đổi khi đúng trạng thái cũ", async () => {
   await db.exec("BEGIN");
   try {
     const c = asClient(db);
-    assert.equal(await model.updateStatus("m-6", "PENDING", "CANCELLED", c), true);
-    assert.equal(await model.updateStatus("m-6", "PENDING", "CANCELLED", c), false);
-    assert.equal(await model.updateStatus("m-6", "PAID", "CANCELLED", c), false);
+    assert.equal(
+      await model.updateStatus("m-6", "PENDING", "CANCELLED", c),
+      true,
+    );
+    assert.equal(
+      await model.updateStatus("m-6", "PENDING", "CANCELLED", c),
+      false,
+    );
+    assert.equal(
+      await model.updateStatus("m-6", "PAID", "CANCELLED", c),
+      false,
+    );
   } finally {
     await db.exec("ROLLBACK");
   }
@@ -175,16 +199,30 @@ test("findExpiredPendingOrders và hasProcessingPayment", async () => {
   await createPending("m-fresh"); // chưa hết hạn
 
   const ids = await tx((c) => model.findExpiredPendingOrders(c));
-  assert.ok(ids.includes("m-exp-free"), "đơn quá hạn, không thanh toán phải có");
-  assert.ok(!ids.includes("m-exp-paying"), "đơn đang thanh toán PROCESSING phải bị loại");
+  assert.ok(
+    ids.includes("m-exp-free"),
+    "đơn quá hạn, không thanh toán phải có",
+  );
+  assert.ok(
+    !ids.includes("m-exp-paying"),
+    "đơn đang thanh toán PROCESSING phải bị loại",
+  );
   assert.ok(!ids.includes("m-fresh"), "đơn chưa hết hạn phải bị loại");
 
-  assert.equal(await tx((c) => model.hasProcessingPayment("m-exp-paying", c)), true);
-  assert.equal(await tx((c) => model.hasProcessingPayment("m-exp-free", c)), false);
+  assert.equal(
+    await tx((c) => model.hasProcessingPayment("m-exp-paying", c)),
+    true,
+  );
+  assert.equal(
+    await tx((c) => model.hasProcessingPayment("m-exp-free", c)),
+    false,
+  );
 });
 
 test("findForPricing trả giá, size, topping và bỏ qua id không tồn tại", async () => {
-  const rows = await tx((c) => model.findForPricing([PRODUCT_ID, "khong-co"], c));
+  const rows = await tx((c) =>
+    model.findForPricing([PRODUCT_ID, "khong-co"], c),
+  );
   assert.equal(rows.length, 1);
   assert.equal(rows[0].id, PRODUCT_ID);
   assert.equal(rows[0].name, "Trà TV4");
@@ -193,7 +231,9 @@ test("findForPricing trả giá, size, topping và bỏ qua id không tồn tạ
     { name: "S", extraPrice: 0 },
     { name: "M", extraPrice: 5000 },
   ]);
-  assert.deepEqual(rows[0].toppings, [{ id: "tc", name: "Trân châu", price: 7000 }]);
+  assert.deepEqual(rows[0].toppings, [
+    { id: "tc", name: "Trân châu", price: 7000 },
+  ]);
 });
 
 test("findItemsForStock trả các dòng của đơn dạng productId/quantity", async () => {
@@ -208,7 +248,10 @@ test("findItemsForStock trả các dòng của đơn dạng productId/quantity",
   const items = await tx((c) => model.findItemsForStock("m-7", c));
   assert.equal(items.length, 2);
   assert.ok(items.every((i) => i.productId === PRODUCT_ID));
-  assert.equal(items.reduce((sum, i) => sum + i.quantity, 0), 3);
+  assert.equal(
+    items.reduce((sum, i) => sum + i.quantity, 0),
+    3,
+  );
 });
 
 test("reopenForRetry đưa PAYMENT_FAILED về PENDING qua trigger 002", async () => {
@@ -227,7 +270,11 @@ test("reopenForRetry đưa PAYMENT_FAILED về PENDING qua trigger 002", async (
   });
 
   assert.equal(await tx((c) => model.reopenForRetry("m-8", c)), true);
-  const row = await db.query<{ status: string; stock_released: boolean; future: boolean }>(
+  const row = await db.query<{
+    status: string;
+    stock_released: boolean;
+    future: boolean;
+  }>(
     "SELECT status, stock_released, expires_at > now() AS future FROM orders WHERE id = $1",
     ["m-8"],
   );

@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import { cartStore } from "@/features/cart/cart.store";
 import { Product } from "@/types/product";
 
 interface ProductDetailViewProps {
@@ -45,11 +46,9 @@ export function ProductDetailView({ product }: ProductDetailViewProps) {
       size: selectedSize,
       toppingIds: selectedToppings,
       quantity: 1,
-      note: note.trim()
+      note: note.trim(),
     };
-    // lưu tạm
-    JSON.parse(localStorage.getItem("cart") || "[]");
-    localStorage.setItem("cart", JSON.stringify([...JSON.parse(localStorage.getItem("cart") || "[]"), cartItem]));
+    cartStore.addItem(cartItem);
 
     const toppingNames = (product.toppings ?? [])
       .filter((t) => selectedToppings.includes(t.id))
@@ -70,7 +69,7 @@ export function ProductDetailView({ product }: ProductDetailViewProps) {
     setTimeout(() => {
       setToast(null);
     }, 4000);
-    setNote(""); 
+    setNote("");
   };
 
   return (
@@ -185,7 +184,6 @@ export function ProductDetailView({ product }: ProductDetailViewProps) {
               placeholder="Ghi yêu cầu của bạn tại đây..."
               value={note}
               onChange={(e) => setNote(e.target.value)}
-              
             />
           </div>
           {/* Nút thêm vào giỏ */}
@@ -202,4 +200,3 @@ export function ProductDetailView({ product }: ProductDetailViewProps) {
     </div>
   );
 }
-

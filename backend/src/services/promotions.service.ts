@@ -1,7 +1,7 @@
 // TV1 — Luật áp dụng và tính tiền khuyến mãi.
 import { BadRequestException, Inject, Injectable } from "@nestjs/common";
-import { PromotionModel } from "../models/promotion.model";
-import type { Promotion } from "../types/promotion";
+import { PromotionModel } from "../models/promotion.model.js";
+import type { Promotion } from "../types/promotion.js";
 
 @Injectable()
 export class PromotionsService {

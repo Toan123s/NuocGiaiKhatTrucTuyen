@@ -2,12 +2,14 @@
 // Không thay test PostgreSQL server; kiểm tra tranh chấp nhiều kết nối vẫn cần DB thật.
 import { PGlite } from "@electric-sql/pglite";
 import { readFileSync } from "node:fs";
-import { resolve } from "node:path";
+import { dirname, resolve } from "node:path";
 import assert from "node:assert/strict";
 import { after, before, test } from "node:test";
-import { CustomerOrderModel } from "../src/models/customer-order.model";
-import type { DatabaseService } from "../src/config/db";
+import { fileURLToPath } from "node:url";
+import { CustomerOrderModel } from "../src/models/customer-order.model.js";
+import type { DatabaseService } from "../src/config/db.js";
 
+const __dirname = dirname(fileURLToPath(import.meta.url));
 const pg = new PGlite();
 const sql = (name: string) =>
   readFileSync(resolve(__dirname, "../database", name), "utf8");
@@ -62,7 +64,9 @@ test("lịch sử: đủ số đơn của user, mới nhất trước, không l�
 
 test("chi tiết đơn PAID của chủ đơn: có món khớp subtotal, payment thành công, điểm EARN, không lộ key nội bộ", async () => {
   const order = (
-    await pg.query<any>("SELECT id, user_id FROM orders WHERE status = 'PAID' LIMIT 1")
+    await pg.query<any>(
+      "SELECT id, user_id FROM orders WHERE status = 'PAID' LIMIT 1",
+    )
   ).rows[0];
   const detail = await model.findDetailForUser(order.id, order.user_id);
   assert.ok(detail);
@@ -79,33 +83,52 @@ test("chi tiết đơn PAID của chủ đơn: có món khớp subtotal, payment
 });
 
 test("chi tiết đơn của người khác hoặc không tồn tại → undefined", async () => {
-  const order = (
-    await pg.query<any>("SELECT id, user_id FROM orders LIMIT 1")
-  ).rows[0];
+  const order = (await pg.query<any>("SELECT id, user_id FROM orders LIMIT 1"))
+    .rows[0];
   const other = (
-    await pg.query<any>("SELECT id FROM users WHERE id <> $1 LIMIT 1", [order.user_id])
+    await pg.query<any>("SELECT id FROM users WHERE id <> $1 LIMIT 1", [
+      order.user_id,
+    ])
   ).rows[0];
   assert.equal(await model.findDetailForUser(order.id, other.id), undefined);
-  assert.equal(await model.findDetailForUser("khong-co", order.user_id), undefined);
+  assert.equal(
+    await model.findDetailForUser("khong-co", order.user_id),
+    undefined,
+  );
 });
 
 test("lockStatus + updateStatus: compare-and-set theo trạng thái cũ", async () => {
   const order = (
-    await pg.query<any>("SELECT id FROM orders WHERE status = 'PENDING' LIMIT 1")
+    await pg.query<any>(
+      "SELECT id FROM orders WHERE status = 'PENDING' LIMIT 1",
+    )
   ).rows[0];
   await pg.exec("BEGIN");
   try {
     assert.equal(await model.lockStatus(adapter as never, order.id), "PENDING");
     assert.equal(
-      await model.updateStatus(adapter as never, order.id, "PENDING", "CANCELLED"),
+      await model.updateStatus(
+        adapter as never,
+        order.id,
+        "PENDING",
+        "CANCELLED",
+      ),
       true,
     );
     // from không còn đúng → không đổi dòng nào
     assert.equal(
-      await model.updateStatus(adapter as never, order.id, "PENDING", "CANCELLED"),
+      await model.updateStatus(
+        adapter as never,
+        order.id,
+        "PENDING",
+        "CANCELLED",
+      ),
       false,
     );
-    assert.equal(await model.lockStatus(adapter as never, "khong-co"), undefined);
+    assert.equal(
+      await model.lockStatus(adapter as never, "khong-co"),
+      undefined,
+    );
   } finally {
     await pg.exec("ROLLBACK"); // không commit: tránh vi phạm ràng buộc stock_released
   }

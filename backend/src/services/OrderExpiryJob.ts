@@ -1,6 +1,6 @@
 import { Injectable, OnModuleDestroy, OnModuleInit } from "@nestjs/common";
-import { dataSource } from "../config/environment";
-import { OrdersService } from "./orders.service";
+import { dataSource } from "../config/environment.js";
+import { OrdersService } from "./orders.service.js";
 
 const INTERVAL_MS = 60_000; // kiểm tra mỗi 60 giây
 

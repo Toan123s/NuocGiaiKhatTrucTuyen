@@ -31,9 +31,7 @@ import {
 import type { OrderDetail } from "@/types/customer-order";
 
 type State =
-  | { kind: "loading" }
-  | { kind: "ready"; order: OrderDetail }
-  | LoadFailure;
+  { kind: "loading" } | { kind: "ready"; order: OrderDetail } | LoadFailure;
 
 type CancelState = {
   step: "idle" | "confirm" | "sending";
@@ -251,7 +249,11 @@ function OrderBody({
       </div>
 
       {order.canCancel && cancel.step !== "idle" ? (
-        <div className="ord-notice" role="alertdialog" aria-label="Xác nhận hủy đơn">
+        <div
+          className="ord-notice"
+          role="alertdialog"
+          aria-label="Xác nhận hủy đơn"
+        >
           <p>Bạn chắc chắn muốn hủy đơn này? Thao tác không thể hoàn tác.</p>
           <div className="ord-actions">
             <button

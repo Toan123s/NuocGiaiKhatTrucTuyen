@@ -2,10 +2,12 @@
 // Dựng PostgreSQL thật bằng PGlite, nạp 001/002/003, thêm một sản phẩm riêng của TV4.
 import { PGlite } from "@electric-sql/pglite";
 import { readFileSync } from "node:fs";
-import { resolve } from "node:path";
-import type { DatabaseService } from "../src/config/db";
-import type { PoolClient } from "../src/types/contracts";
+import { dirname, resolve } from "node:path";
+import { fileURLToPath } from "node:url";
+import type { DatabaseService } from "../src/config/db.js";
+import type { PoolClient } from "../src/types/contracts.js";
 
+const __dirname = dirname(fileURLToPath(import.meta.url));
 export const USER_ID = "demo-user-01";
 export const PRODUCT_ID = "tv4-tra";
 export const UNIT_S = 20000; // giá món size S
@@ -49,7 +51,9 @@ export function asClient(database: PGlite): PoolClient {
   } as unknown as PoolClient;
 }
 
-export type Tx = <T>(operation: (client: PoolClient) => Promise<T>) => Promise<T>;
+export type Tx = <T>(
+  operation: (client: PoolClient) => Promise<T>,
+) => Promise<T>;
 
 // Giống DatabaseService.withTransaction: BEGIN, chạy, COMMIT; lỗi thì ROLLBACK.
 export function makeTx(database: PGlite): Tx {

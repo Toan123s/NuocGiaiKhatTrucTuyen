@@ -1,6 +1,8 @@
 // TV3 — Nạp duy nhất .env tại gốc repo; process env được ưu tiên hơn file. Cấu hình Auth (JWT) cũng đặt ở đây.
 import { config } from "dotenv";
-import { resolve } from "node:path";
+import { dirname, resolve } from "node:path";
+import { fileURLToPath } from "node:url";
+const __dirname = dirname(fileURLToPath(import.meta.url));
 config({ path: resolve(__dirname, "../../../.env"), quiet: true });
 // Lỗi cấu hình có thông điệp an toàn để in ra console (không chứa giá trị bí mật).
 export class ConfigurationError extends Error {
@@ -46,7 +48,7 @@ export function authConfig(): AuthConfig {
     throw new ConfigurationError(
       "JWT_SECRET đang là giá trị mẫu của máy local. Production phải đặt secret riêng, ngẫu nhiên.",
     );
-  const ttl = Number(process.env.JWT_EXPIRES_IN_SECONDS ?? "900");
+  const ttl = Number(process.env.JWT_EXPIRES_IN_SECONDS ?? "3600");
   if (
     !Number.isInteger(ttl) ||
     ttl < TOKEN_TTL_MIN_SECONDS ||

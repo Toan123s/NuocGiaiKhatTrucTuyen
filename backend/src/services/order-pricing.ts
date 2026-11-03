@@ -1,5 +1,5 @@
 import { BadRequestException } from "@nestjs/common";
-import type { ProductPricing } from "../types/order.types";
+import type { ProductPricing } from "../types/order.types.js";
 
 export function calculateUnitPrice(
   product: ProductPricing,
@@ -9,7 +9,9 @@ export function calculateUnitPrice(
   // 1. Tìm size trong product.sizes; không có thì ném BadRequestException
   const sizeOption = product.sizes.find((s) => s.name === size);
   if (!sizeOption) {
-    throw new BadRequestException(`Size ${size} không thuộc món ${product.name}`);
+    throw new BadRequestException(
+      `Size ${size} không thuộc món ${product.name}`,
+    );
   }
 
   // 2. Topping lặp: so độ dài mảng với độ dài new Set(toppingIds)
@@ -22,7 +24,9 @@ export function calculateUnitPrice(
   for (const id of toppingIds) {
     const topping = product.toppings.find((t) => t.id === id);
     if (!topping) {
-      throw new BadRequestException(`Topping ${id} không thuộc món ${product.name}`);
+      throw new BadRequestException(
+        `Topping ${id} không thuộc món ${product.name}`,
+      );
     }
     toppingTotal += topping?.price;
   }

@@ -8,22 +8,23 @@ import {
   UnauthorizedException,
 } from "@nestjs/common";
 import { compare, hash } from "bcryptjs";
-import { sign, TokenExpiredError, verify } from "jsonwebtoken";
+import jsonwebtoken from "jsonwebtoken";
 import type { JwtPayload } from "jsonwebtoken";
 import {
   authConfig,
   ConfigurationError,
   type AuthConfig,
-} from "../config/environment";
+} from "../config/environment.js";
 import type {
   AuthErrorCode,
   AuthenticatedUser,
   AuthSession,
   PublicUser,
-} from "../types/auth.types";
-import { parseLoginInput, parseRegisterInput } from "./auth-validation";
-import { UsersService } from "./users.service";
+} from "../types/auth.types.js";
+import { parseLoginInput, parseRegisterInput } from "./auth-validation.js";
+import { UsersService } from "./users.service.js";
 const BCRYPT_ROUNDS = 10;
+const { sign, TokenExpiredError, verify } = jsonwebtoken;
 // Dùng chung một thông báo cho "sai email" và "sai mật khẩu" để không lộ email nào đã đăng ký.
 const INVALID_CREDENTIALS_MESSAGE = "Email hoặc mật khẩu không đúng.";
 function unauthorized(code: AuthErrorCode, message: string) {

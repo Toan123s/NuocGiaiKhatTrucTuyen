@@ -5,8 +5,8 @@ import {
   Inject,
   Injectable,
 } from "@nestjs/common";
-import { AuthService } from "../services/auth.service";
-import type { AuthenticatedUser } from "../types/auth.types";
+import { AuthService } from "../services/auth.service.js";
+import type { AuthenticatedUser } from "../types/auth.types.js";
 // Chỉ khai báo phần request mà guard cần, tránh phụ thuộc kiểu của express.
 export interface AuthenticatedRequest {
   headers: Record<string, string | string[] | undefined>;

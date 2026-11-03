@@ -2,9 +2,9 @@
 // Quyền sở hữu nằm NGAY trong SQL (user_id = $n): đơn của người khác trả về như không tồn tại.
 import { Inject, Injectable } from "@nestjs/common";
 import type { QueryResultRow } from "pg";
-import { DatabaseService } from "../config/db";
-import type { OrderStatus, PoolClient } from "../types/contracts";
-import type { PaymentAttemptStatus } from "../types/customer-order.types";
+import { DatabaseService } from "../config/db.js";
+import type { OrderStatus, PoolClient } from "../types/contracts.js";
+import type { PaymentAttemptStatus } from "../types/customer-order.types.js";
 
 type Timestamp = Date | string;
 

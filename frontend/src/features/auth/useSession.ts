@@ -21,6 +21,10 @@ function getServerSnapshot(): string | null {
 }
 export function useSession(): StoredSession | null {
   // Snapshot là chuỗi thô (so sánh theo giá trị) nên không gây render lặp.
-  const raw = useSyncExternalStore(subscribe, readRawSession, getServerSnapshot);
+  const raw = useSyncExternalStore(
+    subscribe,
+    readRawSession,
+    getServerSnapshot,
+  );
   return useMemo(() => parseSession(raw), [raw]);
 }

@@ -10,8 +10,9 @@
 
 1. Copy `.env_vidu` thành `.env`, sửa tài khoản PostgreSQL.
 2. `npm run db:check`
-3. `npm run db:migrate` chạy 001 rồi 002 trong transaction, ghi tên/checksum vào schema_migrations.
+3. `npm run db:migrate` chạy các migration schema trong transaction, ghi tên/checksum vào schema_migrations. Nếu chưa có sản phẩm, 006 và 007 được hoãn.
 4. `npm run db:seed` chạy 003 trong transaction riêng.
+5. `npm run db:migrate` lần nữa để áp dụng catalog công thức và ảnh cho các sản phẩm vừa seed.
 
 Có thể chạy SQL thủ công bằng psql/pgAdmin theo đúng thứ tự 001 → 002 → 003. Khi chạy thủ công 001/002, bọc cả hai trong BEGIN/COMMIT. File 003 chứa DO block nên tự nó là một thao tác atomic.
 Không chạy seed tự động khi khởi động backend hoặc trên production. Dữ liệu demo dùng tiền tố `demo-`, email miền `.test`.

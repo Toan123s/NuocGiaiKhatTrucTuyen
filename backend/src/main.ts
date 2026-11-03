@@ -5,9 +5,9 @@ import {
   ConfigurationError,
   dataSource,
   usesLocalSampleJwtSecret,
-} from "./config/environment";
+} from "./config/environment.js";
 import { NestFactory } from "@nestjs/core";
-import { AppModule } from "./app.module";
+import { AppModule } from "./app.module.js";
 // FRONTEND_ORIGIN nhận một hoặc nhiều origin, ngăn cách bằng dấu phẩy.
 function allowedOrigins(): string[] {
   return (process.env.FRONTEND_ORIGIN ?? "http://localhost:3000")

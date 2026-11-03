@@ -80,10 +80,7 @@ export class SepayModel {
     );
   }
 
-  async markOrderPaid(
-    orderId: string,
-    transaction: PoolClient,
-  ): Promise<void> {
+  async markOrderPaid(orderId: string, transaction: PoolClient): Promise<void> {
     await transaction.query(
       `UPDATE orders
        SET status = 'PAID'

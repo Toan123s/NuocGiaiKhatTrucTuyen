@@ -64,11 +64,7 @@ const PAID_STATUSES: ReadonlySet<OrderStatus> = new Set([
 ]);
 
 export type PaymentOutcome =
-  | "SUCCESS"
-  | "FAILED"
-  | "PROCESSING"
-  | "AWAITING_PAYMENT"
-  | "CANCELLED";
+  "SUCCESS" | "FAILED" | "PROCESSING" | "AWAITING_PAYMENT" | "CANCELLED";
 
 /**
  * Kết quả thanh toán suy ra HOÀN TOÀN từ dữ liệu backend (không đọc status trên URL).

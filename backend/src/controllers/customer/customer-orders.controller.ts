@@ -16,13 +16,13 @@ import {
   UnauthorizedException,
   UseGuards,
 } from "@nestjs/common";
-import { JwtAuthGuard } from "../../guards/jwt-auth.guard";
-import { CUSTOMER_ROUTES } from "../../routes/customer.routes";
-import { CustomerOrdersService } from "../../services/customer-orders.service";
+import { JwtAuthGuard } from "../../guards/jwt-auth.guard.js";
+import { CUSTOMER_ROUTES } from "../../routes/customer.routes.js";
+import { CustomerOrdersService } from "../../services/customer-orders.service.js";
 import type {
   OrderDetail,
   OrderListPage,
-} from "../../types/customer-order.types";
+} from "../../types/customer-order.types.js";
 
 interface AuthenticatedRequest {
   user?: { id?: unknown };

@@ -1,8 +1,8 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { BadRequestException } from "@nestjs/common";
-import { calculateUnitPrice } from "../src/services/order-pricing";
-import type { ProductPricing } from "../src/types/order.types";
+import { calculateUnitPrice } from "../src/services/order-pricing.js";
+import type { ProductPricing } from "../src/types/order.types.js";
 
 const product: ProductPricing = {
   id: "tra-dao",

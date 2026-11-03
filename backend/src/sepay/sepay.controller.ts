@@ -1,5 +1,5 @@
 import { Body, Controller, Headers, Post } from "@nestjs/common";
-import { SepayService } from "./sepay.services";
+import { SepayService } from "./sepay.services.js";
 
 @Controller("webhooks/sepay")
 export class SepayController {

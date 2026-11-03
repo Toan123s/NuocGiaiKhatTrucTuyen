@@ -1,13 +1,15 @@
 // Test OrderExpiryJob: không chạy chồng, lỗi không làm kẹt cờ, huỷ timer không lỗi.
 import assert from "node:assert/strict";
 import { mock, test } from "node:test";
-import { OrderExpiryJob } from "../src/services/OrderExpiryJob";
-import type { OrdersService } from "../src/services/orders.service";
+import { OrderExpiryJob } from "../src/services/OrderExpiryJob.js";
+import type { OrdersService } from "../src/services/orders.service.js";
 
 type Internals = { run(): Promise<void>; timer: NodeJS.Timeout | null };
 
 function makeJob(expirePendingOrders: () => Promise<number>) {
-  const job = new OrderExpiryJob({ expirePendingOrders } as unknown as OrdersService);
+  const job = new OrderExpiryJob({
+    expirePendingOrders,
+  } as unknown as OrdersService);
   return { job, internals: job as unknown as Internals };
 }
 

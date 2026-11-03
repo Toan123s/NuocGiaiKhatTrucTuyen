@@ -14,8 +14,7 @@ import styles from "../auth.module.css";
 const NOTICES: Record<string, string> = {
   expired:
     "Phiên đăng nhập đã hết hạn. Đăng nhập lại để tiếp tục, giỏ hàng của bạn vẫn còn nguyên.",
-  required:
-    "Đăng nhập để tiếp tục đặt món. Giỏ hàng của bạn vẫn còn nguyên.",
+  required: "Đăng nhập để tiếp tục đặt món. Giỏ hàng của bạn vẫn còn nguyên.",
   registered: "Tài khoản đã sẵn sàng. Đăng nhập để tiếp tục.",
 };
 export function LoginView() {
@@ -35,7 +34,9 @@ export function LoginView() {
   }, []);
   const target = safeReturnUrl(returnUrl);
   const registerHref =
-    target === "/" ? "/register" : `/register?returnUrl=${encodeURIComponent(target)}`;
+    target === "/"
+      ? "/register"
+      : `/register?returnUrl=${encodeURIComponent(target)}`;
   function focusFirstInvalid(found: FieldErrors) {
     const first = (["email", "password"] as const).find((key) => found[key]);
     if (first) document.getElementById(`login-${first}`)?.focus();

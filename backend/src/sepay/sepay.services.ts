@@ -5,9 +5,9 @@ import {
   Injectable,
   UnauthorizedException,
 } from "@nestjs/common";
-import { DatabaseService } from "../config/db";
-import type { SepayWebhookPayload, SepayWebhookResult } from "./sepay.types";
-import { SepayModel } from "./sepay.model";
+import { DatabaseService } from "../config/db.js";
+import type { SepayWebhookPayload, SepayWebhookResult } from "./sepay.types.js";
+import { SepayModel } from "./sepay.model.js";
 
 @Injectable()
 export class SepayService {
@@ -132,11 +132,17 @@ export class SepayService {
     const match = content.match(
       /\bBREWLITE[-_\s]?ORDER[-_\s]?([0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12})\b/i,
     );
-    if (!match) {
+    const legacyQrMatch = content
+      .trim()
+      .match(
+        /^([0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12})$/i,
+      );
+    const orderId = match?.[1] ?? legacyQrMatch?.[1];
+    if (!orderId) {
       throw new BadRequestException(
-        "Nội dung chuyển khoản không có mã BREWLITE-ORDER hợp lệ",
+        "Nội dung chuyển khoản không có mã đơn hàng hợp lệ",
       );
     }
-    return match[1];
+    return orderId;
   }
 }
