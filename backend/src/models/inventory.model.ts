@@ -148,4 +148,17 @@ export class InventoryModel {
     );
     return (result.rows[0] as StockSnapshot) ?? null;
   }
+
+  async findStock(
+    productId: string,
+    transaction: PoolClient,
+  ): Promise<StockSnapshot | null> {
+    const result = await transaction.query(
+      `SELECT stock, version
+       FROM products
+       WHERE id = $1`,
+      [productId],
+    );
+    return (result.rows[0] as StockSnapshot) ?? null;
+  }
 }

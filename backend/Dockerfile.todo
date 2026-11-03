@@ -1,6 +1,0 @@
-# TV1 TODO: Node 22+, npm ci tại gốc workspace, build backend;
-# COPY dist + database/seed để sample mode vẫn tìm được dữ liệu (không dùng sample nghiệm thu).
-# CMD npm run start -w backend. Không COPY .env/secrets vào image.
-# File .todo chưa phải Dockerfile chạy được; đổi tên và thêm service api vào compose khi hoàn thiện.
-
-# TV1 bàn giao image/build context/cổng/env cho TV6 làm CD/deploy; không tự cấu hình production ở phần local.
