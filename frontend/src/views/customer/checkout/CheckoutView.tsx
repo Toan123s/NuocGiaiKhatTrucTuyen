@@ -18,6 +18,13 @@ interface CreatedOrder {
   total: number;
 }
 
+interface PromotionPreview {
+  code: string;
+  subtotal: number;
+  discount: number;
+  total: number;
+}
+
 const money = new Intl.NumberFormat("vi-VN");
 const formatCurrency = (value: number) => `${money.format(value)} đ`;
 
@@ -26,6 +33,9 @@ export function CheckoutView() {
   const [items, setItems] = useState<CartItem[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
   const [promotionCode, setPromotionCode] = useState("");
+  const [promotionDiscount, setPromotionDiscount] = useState(0);
+  const [promotionError, setPromotionError] = useState("");
+  const [applyingPromotion, setApplyingPromotion] = useState(false);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
@@ -49,6 +59,35 @@ export function CheckoutView() {
 
   const subtotal = useMemo(() => cartStore.calculateSubtotal(products), [items, products]);
   const unavailable = items.filter((item) => !products.some((product) => product.id === item.productId));
+
+  const applyPromotion = async (code: string) => {
+    setPromotionError("");
+    setApplyingPromotion(true);
+    try {
+      const preview = await apiRequest<PromotionPreview>("/promotions/validate", {
+        method: "POST",
+        body: { code, subtotal },
+      });
+      setPromotionCode(preview.code);
+      setPromotionDiscount(preview.discount);
+    } catch (requestError) {
+      setPromotionCode("");
+      setPromotionDiscount(0);
+      setPromotionError(
+        requestError instanceof ApiError
+          ? requestError.message
+          : "Không thể kiểm tra mã giảm giá. Vui lòng thử lại.",
+      );
+    } finally {
+      setApplyingPromotion(false);
+    }
+  };
+
+  const clearPromotion = () => {
+    setPromotionCode("");
+    setPromotionDiscount(0);
+    setPromotionError("");
+  };
 
   const submitOrder = async () => {
     if (submitting || items.length === 0 || loading || unavailable.length > 0) return;
@@ -158,13 +197,15 @@ export function CheckoutView() {
           <div className="checkout-promotion">
             <PromotionInput
               subtotal={subtotal}
-              discount={0}
-              total={subtotal}
+              discount={promotionDiscount}
+              total={subtotal - promotionDiscount}
               appliedCode={promotionCode || undefined}
-              onApplyCode={(code) => { setPromotionCode(code); setError(""); }}
-              onClearPromotion={() => setPromotionCode("")}
+              error={promotionError}
+              isApplying={applyingPromotion}
+              onApplyCode={applyPromotion}
+              onClearPromotion={clearPromotion}
             />
-            <p className="promotion-disclaimer">Mã sẽ được máy chủ kiểm tra khi tạo đơn. Mức giảm chính thức hiển thị sau khi đơn được tạo.</p>
+            <p className="promotion-disclaimer">Mức giảm trên đây là tạm tính; máy chủ sẽ kiểm tra lại mã và tính tổng chính thức khi tạo đơn.</p>
           </div>
         </div>
 
@@ -172,10 +213,11 @@ export function CheckoutView() {
           <h2>Tổng kết đơn hàng</h2>
           <div className="summary-row"><span>Tạm tính</span><strong>{formatCurrency(subtotal)}</strong></div>
           <div className="summary-row summary-muted"><span>Nhận tại quầy</span><span>Miễn phí</span></div>
-          <div className="summary-total"><span>Tổng tạm tính</span><strong>{formatCurrency(subtotal)}</strong></div>
+          <div className="summary-row"><span>Giảm giá</span><strong>-{formatCurrency(promotionDiscount)}</strong></div>
+          <div className="summary-total"><span>Tổng tạm tính</span><strong>{formatCurrency(subtotal - promotionDiscount)}</strong></div>
           <p className="summary-note">Giá có thể thay đổi theo dữ liệu mới nhất. Máy chủ sẽ tính lại giá và tồn kho trước khi tạo đơn.</p>
           {!session && <p className="login-reminder">Bạn cần đăng nhập để đặt hàng. Giỏ hàng sẽ được giữ nguyên khi quay lại.</p>}
-          <button className="primary-button summary-button" type="button" onClick={submitOrder} disabled={submitting || unavailable.length > 0}>
+          <button className="primary-button summary-button" type="button" onClick={submitOrder} disabled={submitting || applyingPromotion || unavailable.length > 0}>
             {submitting ? "Đang tạo đơn…" : session ? "Xác nhận đặt hàng" : "Đăng nhập để tiếp tục"}
             {!submitting && <span aria-hidden="true">→</span>}
           </button>
