@@ -2,13 +2,6 @@
 
 Khung đồ án Công nghệ phần mềm dùng Next.js, NestJS và PostgreSQL. Chỉ giao diện khách hàng.
 
-## Đã làm và chưa làm
-
-- Đã chạy: trang chính, 40 đồ uống có giá/mô tả, ảnh trống, tìm kiếm/lọc loại, responsive, loading/empty/error; GET /products; health; schema, trigger kiểm tra và dữ liệu demo 7 bảng; đăng ký/đăng nhập (JWT) và guard cho API cần đăng nhập.
-- Đã có: chi tiết món, giỏ, checkout, QR chuyển khoản theo cấu hình, webhook SePay và kiểm tra trạng thái đơn. Không dùng thanh toán mô phỏng để xác nhận tiền thật.
-- TODO trong source ghi rõ TV phụ trách, method, trang và điều kiện. Không có Admin/nhân viên.
-- Compose có cấu hình DB, API và web; CI/CD cùng kiểm thử tích hợp nhà cung cấp thanh toán vẫn cần hoàn thiện.
-
 ## Chạy bằng PostgreSQL
 
 Yêu cầu Node.js 22+, npm và PostgreSQL (hoặc Docker Desktop).
