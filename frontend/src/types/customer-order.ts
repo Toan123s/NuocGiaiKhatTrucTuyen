@@ -13,6 +13,7 @@ export type PaymentMethod = "WALLET" | "CARD";
 
 export interface OrderSummary {
   id: string;
+  paymentCode: string;
   status: OrderStatus;
   subtotal: number;
   discount: number;
@@ -52,6 +53,7 @@ export interface PaymentAttemptView {
 
 export interface OrderDetail {
   id: string;
+  paymentCode: string;
   status: OrderStatus;
   subtotal: number;
   discount: number;

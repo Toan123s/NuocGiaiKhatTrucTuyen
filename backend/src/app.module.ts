@@ -63,8 +63,6 @@ import { SepayService } from "./sepay/sepay.services.js";
     CustomerOrdersService,
     CustomerOrderModel,
     OrderStateService,
-    SepayModel,
-    SepayService,
     LoyaltyModel,       
     LoyaltyService,     
     MockPaymentGateway,

@@ -26,6 +26,7 @@ const model = new CustomerOrderModel(adapter as unknown as DatabaseService);
 before(async () => {
   await pg.exec("BEGIN");
   await pg.exec(sql("001_schema.sql"));
+  await pg.exec(sql("007_order_payment_codes.sql"));
   await pg.exec(sql("002_integrity.sql"));
   await pg.exec(sql("003_seed.sql"));
   await pg.exec("COMMIT");

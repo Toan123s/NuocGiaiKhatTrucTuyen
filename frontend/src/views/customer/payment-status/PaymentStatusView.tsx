@@ -8,7 +8,7 @@ import { Suspense, useEffect, useRef } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { usePaymentOutcome } from "@/features/orders/use-payment-outcome";
-import { formatVnd, shortOrderId } from "@/features/orders/order-format";
+import { formatVnd } from "@/features/orders/order-format";
 import { CartStore } from "@/features/cart/cart.store";
 import { FailureBlock, LoadingBlock } from "@/components/orders/OrderBlocks";
 import "@/components/orders/orders.css";
@@ -90,7 +90,7 @@ function PaymentStatusContent() {
           <>
             <h1>Thanh toán thành công</h1>
             <p>
-              Đơn #{shortOrderId(order.id)} · {formatVnd(order.total)}
+               Đơn #{order.paymentCode} · {formatVnd(order.total)}
             </p>
             {order.pointsEarned !== null ? (
               <p>Bạn nhận được +{order.pointsEarned} điểm thưởng.</p>
@@ -190,6 +190,13 @@ function PaymentStatusContent() {
               Đang chờ ngân hàng xác nhận chuyển khoản. Vui lòng không đóng
               trang này và không chuyển tiền lần nữa…
             </p>
+            {new Date(order.expiresAt).getTime() > Date.now() && (
+              <div className="ord-actions">
+                <Link className="primary-button" href={payHref}>
+                  Xem mã QR thanh toán
+                </Link>
+              </div>
+            )}
           </>
         )}
       </div>

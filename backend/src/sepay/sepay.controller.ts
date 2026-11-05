@@ -1,9 +1,9 @@
-import { Body, Controller, Headers, Post } from "@nestjs/common";
+import { Body, Controller, Headers, Inject, Post } from "@nestjs/common";
 import { SepayService } from "./sepay.services.js";
 
 @Controller("webhooks/sepay")
 export class SepayController {
-  constructor(private readonly service: SepayService) {}
+  constructor(@Inject(SepayService) private readonly service: SepayService) {}
 
   @Post()
   async receive(

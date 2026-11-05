@@ -14,12 +14,12 @@ Các đường dẫn frontend rút gọn `views/`, `features/`, `components/`, `
 
 | TV  | Họ và tên | Phần phụ trách chính                      | Việc phụ gắn cùng module                                    |
 | --- | --------- | ----------------------------------------- | ----------------------------------------------------------- |
-| 1   | Điền tên  | Sản phẩm, chi tiết/tùy chọn và khuyến mãi | Giao diện chung, ảnh, Docker/Compose chạy local             |
-| 2   | Điền tên  | Giỏ hàng và giao diện checkout            | Lưu giỏ, gắn PromotionInput của TV1, nối API TV4            |
-| 3   | Điền tên  | Đăng ký/đăng nhập, JWT và bảo mật         | Env/API client/error dùng chung, CI và required checks      |
-| 4   | Điền tên  | Backend tạo/hủy đơn và tồn kho            | Giá chốt, transaction, hết hạn, hoàn/giữ tồn lại            |
-| 5   | Điền tên  | Giao diện/API thanh toán và loyalty       | Mock gateway, idempotency, timeout/đối soát                 |
-| 6   | Điền tên  | Kết quả thanh toán, lịch sử/chi tiết đơn  | Quy tắc trạng thái, CD/production, ghép E2E/README bàn giao |
+| 1   | Nguyễn Khánh Duy | Sản phẩm, chi tiết/tùy chọn và khuyến mãi | Giao diện chung, ảnh, Docker/Compose chạy local             |
+| 2   | Tô Minh Trí | Giỏ hàng và giao diện checkout            | Lưu giỏ, gắn PromotionInput của TV1, nối API TV4            |
+| 3   | Võ Hoàng Hiểu Băng   | Đăng ký/đăng nhập, JWT và bảo mật         | Env/API client/error dùng chung, CI và required checks      |
+| 4   | Trần Lê Phúc Toàn  | Backend tạo/hủy đơn và tồn kho            | Giá chốt, transaction, hết hạn, hoàn/giữ tồn lại            |
+| 5   | Nguyễn Thu Thảo  | Giao diện/API thanh toán và loyalty       | Mock gateway, idempotency, timeout/đối soát                 |
+| 6   | Lưu Trọng Thái Anh | Kết quả thanh toán, lịch sử/chi tiết đơn  | Quy tắc trạng thái, CD/production, ghép E2E/README bàn giao |
 
 ## Thành viên 1 Sản phẩm khuyến mãi và Docker local
 

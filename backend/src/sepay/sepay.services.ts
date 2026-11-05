@@ -2,6 +2,7 @@ import { createHash, randomUUID, timingSafeEqual } from "node:crypto";
 import {
   BadRequestException,
   ConflictException,
+  Inject,
   Injectable,
   UnauthorizedException,
 } from "@nestjs/common";
@@ -12,8 +13,8 @@ import { SepayModel } from "./sepay.model.js";
 @Injectable()
 export class SepayService {
   constructor(
-    private readonly db: DatabaseService,
-    private readonly model: SepayModel,
+    @Inject(DatabaseService) private readonly db: DatabaseService,
+    @Inject(SepayModel) private readonly model: SepayModel,
   ) {}
 
   async receiveWebhook(
@@ -52,6 +53,9 @@ export class SepayService {
         throw new ConflictException(
           `Đơn không ở trạng thái PENDING: ${order.status}`,
         );
+      }
+      if (!order.isUnexpired) {
+        throw new ConflictException("Mã QR của đơn đã hết hạn");
       }
       if (webhook.transferAmount !== order.total) {
         throw new BadRequestException("Số tiền SePay không khớp tổng đơn");
@@ -129,6 +133,7 @@ export class SepayService {
   }
 
   private extractOrderId(content: string): string {
+    const paymentCode = content.match(/\bDH[0-9]{8}\b/i)?.[0].toUpperCase();
     const match = content.match(
       /\bBREWLITE[-_\s]?ORDER[-_\s]?([0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12})\b/i,
     );
@@ -137,7 +142,7 @@ export class SepayService {
       .match(
         /^([0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12})$/i,
       );
-    const orderId = match?.[1] ?? legacyQrMatch?.[1];
+    const orderId = paymentCode ?? match?.[1] ?? legacyQrMatch?.[1];
     if (!orderId) {
       throw new BadRequestException(
         "Nội dung chuyển khoản không có mã đơn hàng hợp lệ",

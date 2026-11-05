@@ -26,10 +26,12 @@ export class SepayModel {
       status: string;
       total: number;
       userId: string;
+      isUnexpired: boolean;
     }>(
-      `SELECT id, status, total, user_id AS "userId"
+      `SELECT id, status, total, user_id AS "userId",
+              expires_at > now() AS "isUnexpired"
        FROM orders
-       WHERE id = $1
+        WHERE id = $1 OR payment_code = $1
        FOR UPDATE`,
       [orderId],
     );

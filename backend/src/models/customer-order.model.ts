@@ -10,6 +10,7 @@ type Timestamp = Date | string;
 
 export interface OrderSummaryRow {
   id: string;
+  payment_code: string;
   status: OrderStatus;
   subtotal: number;
   discount: number;
@@ -22,6 +23,7 @@ export interface OrderSummaryRow {
 
 export interface OrderDetailRow {
   id: string;
+  payment_code: string;
   status: OrderStatus;
   subtotal: number;
   discount: number;
@@ -72,7 +74,7 @@ export class CustomerOrderModel {
     offset: number,
   ): Promise<OrderSummaryRow[]> {
     return this.run<OrderSummaryRow>(
-      `SELECT o.id, o.status, o.subtotal, o.discount, o.total,
+      `SELECT o.id, o.payment_code, o.status, o.subtotal, o.discount, o.total,
               o.created_at, o.expires_at,
               (SELECT COALESCE(SUM(i.quantity), 0)::int
                  FROM order_items i WHERE i.order_id = o.id) AS item_count,
@@ -97,7 +99,7 @@ export class CustomerOrderModel {
     userId: string,
   ): Promise<OrderDetailRow | undefined> {
     const rows = await this.run<OrderDetailRow>(
-      `SELECT o.id, o.status, o.subtotal, o.discount, o.total,
+      `SELECT o.id, o.payment_code, o.status, o.subtotal, o.discount, o.total,
               o.created_at, o.expires_at,
               (SELECT pr.code FROM promotions pr WHERE pr.id = o.promotion_id) AS promotion_code,
               (SELECT l.points FROM loyalty_transactions l

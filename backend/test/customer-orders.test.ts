@@ -135,6 +135,7 @@ test("transitionOrder: không có đơn → 404; sai cạnh → 409 và không U
 
 const row = (id: string) => ({
   id,
+  payment_code: "DH00000001",
   status: "PENDING" as OrderStatus,
   subtotal: 70000,
   discount: 0,
@@ -160,6 +161,7 @@ test("getMyOrders: truyền userId + limit+1, cắt dư và báo hasMore", async
   const page = await service.getMyOrders("u1", "2", "4");
   assert.deepEqual(calls, [["u1", 3, 4]]);
   assert.equal(page.orders.length, 2);
+  assert.equal(page.orders[0].paymentCode, "DH00000001");
   assert.equal(page.hasMore, true);
   assert.equal(page.orders[0].createdAt, "2026-10-20T10:00:00.000Z");
 });
@@ -214,6 +216,7 @@ test("getOrderDetail: 404 khi không thuộc user, 400 khi mã rỗng, canCancel
     BadRequestException,
   );
   const detail = await service.getOrderDetail("u1", "o1");
+  assert.equal(detail.paymentCode, "DH00000001");
   assert.equal(detail.canCancel, false);
   assert.equal(detail.canRetryPayment, false);
   assert.equal(detail.payments[0].createdAt, "2026-10-20T10:01:00.000Z");

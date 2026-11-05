@@ -17,9 +17,9 @@ export class OrderModel {
     transaction: PoolClient,
   ): Promise<OrderRow> {
     const result = await transaction.query(
-      `INSERT INTO orders (id, user_id, subtotal, discount, total, promotion_id)
-       VALUES ($1, $2, $3, $4, $5, $6)
-       RETURNING id, status, subtotal, discount, total, expires_at AS "expiresAt"`,
+      `INSERT INTO orders (id, user_id, subtotal, discount, total, promotion_id, expires_at)
+       VALUES ($1, $2, $3, $4, $5, $6, now() + interval '5 minutes')
+        RETURNING id, payment_code AS "paymentCode", status, subtotal, discount, total, expires_at AS "expiresAt"`,
       [
         order.id,
         order.userId,
@@ -155,7 +155,7 @@ export class OrderModel {
       `UPDATE orders
        SET status = 'PENDING',
            stock_released = false,
-           expires_at = now() + interval '15 minutes'
+           expires_at = now() + interval '5 minutes'
        WHERE id = $1 AND status = 'PAYMENT_FAILED'`,
       [orderId],
     );

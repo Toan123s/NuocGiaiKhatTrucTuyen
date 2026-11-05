@@ -12,6 +12,7 @@ import type { Product } from "@/types/product";
 
 interface CreatedOrder {
   orderId: string;
+  paymentCode: string;
   status: string;
   subtotal: number;
   discount: number;
@@ -145,7 +146,7 @@ export function CheckoutView() {
           <span className="eyebrow">ĐƠN HÀNG ĐÃ ĐƯỢC TẠO</span>
           <h1>Đơn của bạn đã sẵn sàng</h1>
           <p className="order-number">
-            Mã đơn <strong>{createdOrder.orderId}</strong>
+            Mã đơn <strong>{createdOrder.paymentCode}</strong>
           </p>
           <div className="official-total">
             <span>Tổng tiền máy chủ xác nhận</span>

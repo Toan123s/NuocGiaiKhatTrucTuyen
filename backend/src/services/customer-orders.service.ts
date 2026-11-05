@@ -45,6 +45,7 @@ function parseIntParam(
 function toSummary(row: OrderSummaryRow): OrderSummary {
   return {
     id: row.id,
+    paymentCode: row.payment_code,
     status: row.status,
     subtotal: row.subtotal,
     discount: row.discount,
@@ -109,6 +110,7 @@ export class CustomerOrdersService {
 
     return {
       id: row.id,
+      paymentCode: row.payment_code,
       status: row.status,
       subtotal: row.subtotal,
       discount: row.discount,

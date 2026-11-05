@@ -13,7 +13,6 @@ import {
 import {
   formatDateTime,
   formatVnd,
-  shortOrderId,
 } from "@/features/orders/order-format";
 import {
   FailureBlock,
@@ -108,7 +107,7 @@ export function OrderHistoryView() {
                   href={`/orders/${encodeURIComponent(order.id)}`}
                 >
                   <div>
-                    <strong>Đơn #{shortOrderId(order.id)}</strong>
+                     <strong>Đơn #{order.paymentCode}</strong>
                     <div className="ord-meta">
                       {formatDateTime(order.createdAt)} · {order.itemCount} món
                     </div>

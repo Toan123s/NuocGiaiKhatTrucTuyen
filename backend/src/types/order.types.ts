@@ -11,6 +11,7 @@ export interface NewOrder {
 
 export interface OrderRow {
   id: string;
+  paymentCode: string;
   status: OrderStatus;
   subtotal: number;
   discount: number;

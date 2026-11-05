@@ -133,6 +133,7 @@ export class OrdersService {
 
       return {
         orderId: order.id,
+        paymentCode: order.paymentCode,
         status: order.status,
         subtotal: order.subtotal,
         discount: order.discount,
