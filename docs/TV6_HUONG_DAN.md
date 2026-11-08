@@ -11,8 +11,8 @@
 | Frontend gửi token đăng nhập khi gọi `/orders/*`                 | Xong (đọc phiên của TV3)                                                     | `frontend/src/lib/client-api.ts`                                 |
 | Smoke test sau deploy                                            | Xong                                                                         | `scripts/smoke.mjs`, chạy bằng `node scripts/smoke.mjs`          |
 | Nút hủy đơn gọi API TV4                                          | Đã nối `POST /orders/:id/cancel`; cần E2E xác minh trên môi trường chạy thật | `OrderDetailView.tsx`                                            |
-| E2E toàn luồng (menu → giỏ → đăng nhập → thanh toán → PAID)      | Chưa làm được: thanh toán TV5 vẫn là khung 501                               | `tests/e2e/checkout.spec.todo.ts`                                |
-| Workflow CD (image, registry, deploy, rollback)                  | Chưa làm: nhóm chưa chốt nơi hosting                                         | xem mục 3                                                        |
+| E2E toàn luồng (menu → giỏ → đăng nhập → thanh toán → PAID) | Đã viết bằng Playwright, **chưa chạy được** trong môi trường soạn (không có Docker/mạng); cần chạy trên Docker thật | `tests/e2e/checkout.spec.ts`, `playwright.config.ts`, `.github/workflows/e2e.yml` |
+| Workflow CD (image, registry, deploy, smoke, rollback) | Đã viết cho VPS + Docker Compose + GHCR; **chưa chạy thật** (chưa có VPS và secret) | `.github/workflows/cd.yml`, `rollback.yml`, `docker-compose.prod.yml`, `deploy/`, `docs/deployment.md` |
 
 ## 2. Smoke test sau deploy
 
@@ -34,7 +34,9 @@ Các bước kiểm tra: `/health` phải là `database: "up"` (sample mode bị
 
 Chạy thử local sau `npm run dev` (không đặt biến thì mặc định `localhost:4000` và `localhost:3000`): `node scripts/smoke.mjs`. Ở máy local mật khẩu mẫu của seed nằm trong `backend/database/README.md`.
 
-## 3. Checklist deploy và rollback (chưa phụ thuộc nhà cung cấp hosting)
+## 3. Checklist deploy và rollback
+
+Nền tảng đã chọn và hướng dẫn đầy đủ: [`docs/deployment.md`](deployment.md) (VPS, Docker Compose, Caddy, GHCR, GitHub Actions). Checklist chung bên dưới vẫn đúng với mọi nhà cung cấp.
 
 Trước khi deploy:
 
@@ -50,11 +52,14 @@ Rollback: giữ lại image và tag của bản chạy tốt trước đó, khi 
 
 Khi nhóm chốt hosting, workflow CD nên có thứ tự: build image từ Docker của TV1, đẩy lên registry, deploy, chạy `node scripts/smoke.mjs`, và tự rollback nếu smoke lỗi. Chỉ chọn nhà cung cấp và điền secret khi cả nhóm đã thống nhất.
 
-## 4. Điểm cần báo TV1 và TV3 (đọc từ code, chưa chạy Docker để xác nhận)
+## 4. Điểm cần báo TV1, TV3, TV5 (đọc từ code, chưa chạy Docker để xác nhận)
 
-- `docker-compose.yml` ở service `api` không truyền `JWT_SECRET` và không có `env_file`. `.dockerignore` ở gốc repo loại `.env` khỏi image. `main.ts` kiểm tra `JWT_SECRET` khi khởi động, nên container `api` nhiều khả năng sẽ dừng ngay khi chạy bằng Docker. Cần TV1 và TV3 thêm `JWT_SECRET: ${JWT_SECRET:?...}` (và `JWT_EXPIRES_IN_SECONDS` nếu muốn) vào `environment` của `api`.
-- Image `api` đặt `NODE_ENV=production`, mà production từ chối secret chứa `local_only`. Khi chạy Docker thử local, cần một `JWT_SECRET` riêng, không phải giá trị mẫu trong `.env_vidu`.
-- `FRONTEND_ORIGIN` trong compose đang cố định là `http://localhost:3000`; production cần đổi theo URL thật.
+- `docker-compose.yml` hiện đã truyền `JWT_SECRET` cho `api` (mục cũ về việc thiếu biến này đã được TV1 xử lý). Khi chạy Docker local vẫn cần `JWT_SECRET` riêng, không chứa `local_only`, vì image `api` đặt `NODE_ENV=production`.
+- `frontend/Dockerfile` chưa khai báo `ARG NEXT_PUBLIC_API_BASE_URL`, nên image web production sẽ gọi `http://localhost:4000`. TV1 thêm 2 dòng `ARG`/`ENV` (xem `docs/deployment.md`, mục 3). CD đã truyền build-arg sẵn.
+- `docker-compose.yml` chưa truyền `SEPAY_WEBHOOK_API_KEY` cho `api` nên webhook trong container luôn 401. TV1 thêm biến này; E2E tạm dùng `docker-compose.e2e.yml`.
+- `.env_vidu` có `NEXT_PUBLIC_SEPAY_WEBHOOK_API_KEY`: biến `NEXT_PUBLIC_*` bị nhúng vào trình duyệt, không được điền khóa thật.
+- Seed tạo 24 tài khoản demo cùng mật khẩu `BrewLite123!`; trên production cần đổi mật khẩu hoặc vô hiệu các tài khoản này.
+- `PaymentView` (TV5): cổng mô phỏng `MockPaymentGateway` trả kết quả ngẫu nhiên (khoảng 80% thành công, 10% thất bại, 10% timeout), nên E2E dùng webhook SePay để có kết quả cố định.
 
 ## 5. Kiểm tra quyền sở hữu và chuyển trạng thái
 
@@ -71,3 +76,17 @@ SEPAY_WEBHOOK_API_KEY=<giá trị trong .env của API> node scripts/simulate-se
 ```
 
 Tổng tiền phải đúng bằng tổng đơn, nếu không webhook trả 400. Script chỉ chạy với API trên localhost.
+
+## 7. Kiểm tra lỗi "tự hủy đơn khi thanh toán thành công / xem đơn"
+
+Kiểm tra bằng đọc code (không chạy được hệ thống), phần TV6 và các điểm liên quan để báo TV4:
+
+- **Frontend (TV6):** `cancelOrder` chỉ được gọi trong `confirmCancel` của `OrderDetailView.tsx`, sau khi khách bấm "Hủy đơn" rồi "Xác nhận hủy". Trang `/payment-status` và `/orders/[id]` khi tải chỉ gọi `GET /orders/:id`; polling chỉ gọi thêm `POST /payments/:id/reconcile` khi lần thanh toán mới nhất đang `PROCESSING`. Không có đường nào gọi `/cancel` ngầm.
+- **Xóa giỏ:** `PaymentStatusView` chỉ xóa giỏ khi backend xác nhận đơn đã trả tiền. Đã sửa để mỗi mã đơn chỉ xóa giỏ **một lần** (ghi nhớ ở `localStorage`, khóa `brewlite.cleared-orders`), tránh xóa nhầm giỏ mới khi khách mở lại trang kết quả của đơn cũ.
+- **Backend (đọc để báo TV4, không sửa):** mọi `UPDATE orders` đều có `WHERE id = $1` (không có câu lệnh hủy theo `user_id`). `finalizePayment` và webhook SePay chỉ đổi đúng `orderId` được thanh toán. `findExpiredPendingOrders` chỉ lấy đơn `PENDING` có `expires_at < now()` và không có thanh toán `PROCESSING`; `expires_at` mặc định `now() + 15 phút` (`TIMESTAMPTZ`, không lệch múi giờ).
+- **Khác với đề bài:** đề nói `OrderExpiryJob` chạy mỗi 5 giây, nhưng trong code nhận được `INTERVAL_MS = 60_000` (60 giây). Nếu bản của TV4 đã đổi, cần đối chiếu lại.
+- **Chưa xác nhận được nguyên nhân gốc:** chưa tái hiện được lỗi vì không chạy được hệ thống. Nếu lỗi vẫn xảy ra, kiểm tra theo thứ tự: trạng thái đơn trong DB trước/sau khi xem, `expires_at` của đơn bị hủy (có phải đã quá 15 phút không), và log của `OrderExpiryJob`. Test E2E "Nhiều đơn PENDING độc lập" trong `tests/e2e/checkout.spec.ts` tái hiện đúng kịch bản của báo lỗi.
+
+## 8. E2E (Playwright)
+
+Chạy trên Docker, xem `docs/deployment.md` mục 8. Gồm 4 test: luồng đầy đủ đến PAID (tiền về qua webhook SePay để kết quả cố định), thanh toán mô phỏng (chấp nhận mọi kết quả hợp lệ, không bị hủy nhầm), một đơn PAID không đổi đơn PENDING khác, và (tùy chọn, `E2E_WAIT_EXPIRY_JOB=1`) job hết hạn không hủy đơn chưa hết hạn. Chưa có `data-testid` từ TV2 nên selector dùng role/nhãn/`href`; đổi chữ trên giao diện có thể làm test hỏng và cần cập nhật theo.
