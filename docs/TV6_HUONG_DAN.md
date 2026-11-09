@@ -11,8 +11,22 @@
 | Frontend gửi token đăng nhập khi gọi `/orders/*` | Xong (đọc phiên của TV3) | `frontend/src/lib/client-api.ts` |
 | Smoke test sau deploy | Xong | `scripts/smoke.mjs`, chạy bằng `node scripts/smoke.mjs` |
 | Nút hủy đơn gọi API TV4 | Đã nối `POST /orders/:id/cancel`; cần E2E xác minh trên môi trường chạy thật | `OrderDetailView.tsx` |
-| E2E toàn luồng (menu → giỏ → đăng nhập → thanh toán → PAID) | Chưa làm được: thanh toán TV5 vẫn là khung 501 | `tests/e2e/checkout.spec.todo.ts` |
+| Selector UI Menu/Chi tiết/Giỏ/Checkout do TV2 bàn giao | Xong; contract và ví dụ Playwright | `docs/TV2_E2E_SELECTORS.md` |
+| E2E checkout đến PAID | Có kịch bản Playwright thực thi; thanh toán được mô phỏng bằng callback SePay ghi trạng thái vào DB. Trang UI `/payment` của TV5 vẫn là stub nên test không bao phủ giao diện chọn Ví/Thẻ. | `tests/e2e/checkout.spec.ts` |
 | Workflow CD (image, registry, deploy, rollback) | Chưa làm: nhóm chưa chốt nơi hosting | xem mục 3 |
+
+## E2E checkout
+
+Test dùng web/API/PostgreSQL đang chạy trong Docker, tài khoản seed `khach01@brewlite.test`, và mô phỏng cổng thanh toán bằng webhook SePay thật để trạng thái `PAID` được đọc từ database. Mỗi lần chạy tạo một đơn `PAID`, trừ tồn kho một ly và cộng điểm cho tài khoản demo.
+
+```powershell
+npm ci
+npx playwright install chromium
+docker compose up --build -d
+npm run test:e2e
+```
+
+Trước khi khởi động Docker, `.env` ở thư mục gốc cần có `DB_PASSWORD`, `JWT_SECRET` ngẫu nhiên hợp lệ và `SEPAY_WEBHOOK_API_KEY`. Test đọc webhook key từ `.env`; có thể đổi base URL/tài khoản bằng `E2E_WEB_URL`, `E2E_API_URL`, `E2E_EMAIL` và `E2E_PASSWORD`.
 
 ## 2. Smoke test sau deploy
 

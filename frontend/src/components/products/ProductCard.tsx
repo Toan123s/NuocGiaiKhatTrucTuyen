@@ -10,10 +10,11 @@ export function ProductCard({ product: p }: { product: Product }) {
   const [imageFailed, setImageFailed] = useState(false);
 
   return (
-    <article className="product-card">
+    <article className="product-card" data-testid="product-card" data-product-id={p.id}>
       <Link
         href={`/products/${p.id}`}
         className="product-image"
+        data-testid="product-image-link"
         aria-label={`Xem ${p.name}`}
       >
         {p.badge && <span className="badge">{p.badge}</span>}
@@ -35,7 +36,7 @@ export function ProductCard({ product: p }: { product: Product }) {
       <div className="product-info">
         <span className="product-category">{p.category}</span>
         <h3>
-          <Link href={`/products/${p.id}`}>{p.name}</Link>
+          <Link href={`/products/${p.id}`} data-testid="product-name-link">{p.name}</Link>
         </h3>
         <p>{p.description}</p>
         <div className="product-bottom">
@@ -46,6 +47,7 @@ export function ProductCard({ product: p }: { product: Product }) {
           <Link
             href={`/products/${p.id}`}
             className="product-action"
+            data-testid="product-select-link"
             aria-label={`Chọn ${p.name}`}
           >
             ↗

@@ -45,7 +45,7 @@ export function CartView() {
   const removeItem = (item: CartItem) => setItems(cartStore.removeItem(getCartItemKey(item)));
 
   return (
-    <section className="container shopping-page">
+    <section className="container shopping-page" data-testid="cart-page">
       <div className="shopping-heading">
         <div>
           <span className="eyebrow">ĐẶT MÓN CỦA BẠN</span>
@@ -59,7 +59,7 @@ export function CartView() {
       {loading ? (
         <div className="shopping-state" aria-live="polite">Đang tải giỏ hàng…</div>
       ) : items.length === 0 ? (
-        <div className="shopping-empty">
+        <div className="shopping-empty" data-testid="cart-empty-state">
           <span className="empty-cup" aria-hidden="true">☕</span>
           <h2>Giỏ hàng đang trống</h2>
           <p>Chọn một món yêu thích từ thực đơn để bắt đầu.</p>
@@ -77,7 +77,7 @@ export function CartView() {
                 : 0;
               const key = getCartItemKey(item);
               return (
-                <article className="cart-item" key={key}>
+                <article className="cart-item" key={key} data-testid="cart-item" data-cart-item-key={key} data-product-id={item.productId} data-size={item.size} data-topping-ids={[...item.toppingIds].sort().join(",")}>
                   <div className="cart-item-image">
                     {product?.imageUrl ? (
                       <Image src={product.imageUrl} alt="" fill sizes="96px" />
@@ -96,12 +96,12 @@ export function CartView() {
                     {item.note && <p className="cart-item-note">Ghi chú: {item.note}</p>}
                     <div className="cart-item-actions">
                       <div className="quantity-control" aria-label={`Số lượng ${product?.name ?? "món"}`}>
-                        <button type="button" onClick={() => updateQuantity(item, item.quantity - 1)} disabled={item.quantity <= 1} aria-label="Giảm số lượng">−</button>
-                        <span aria-live="polite">{item.quantity}</span>
-                        <button type="button" onClick={() => updateQuantity(item, item.quantity + 1)} disabled={item.quantity >= 99} aria-label="Tăng số lượng">+</button>
+                        <button type="button" data-testid="cart-decrease-quantity" onClick={() => updateQuantity(item, item.quantity - 1)} disabled={item.quantity <= 1} aria-label="Giảm số lượng">−</button>
+                        <span data-testid="cart-item-quantity" aria-live="polite">{item.quantity}</span>
+                        <button type="button" data-testid="cart-increase-quantity" onClick={() => updateQuantity(item, item.quantity + 1)} disabled={item.quantity >= 99} aria-label="Tăng số lượng">+</button>
                       </div>
                       <span className="cart-unit-price">{formatCurrency(unitPrice)} / món</span>
-                      <button className="remove-item" type="button" onClick={() => removeItem(item)}>Xóa</button>
+                      <button className="remove-item" type="button" data-testid="cart-remove-item" onClick={() => removeItem(item)}>Xóa</button>
                     </div>
                   </div>
                 </article>
@@ -116,7 +116,7 @@ export function CartView() {
             <div className="summary-total"><span>Tạm tính</span><strong>{formatCurrency(subtotal)}</strong></div>
             <p className="summary-note">Giá cuối cùng sẽ được máy chủ xác nhận khi tạo đơn.</p>
             {loadError ? <button className="primary-button summary-button" type="button" disabled>Chưa thể tiếp tục</button> : (
-              <Link href="/checkout" className="primary-button summary-button">Tiến hành đặt hàng <span aria-hidden="true">→</span></Link>
+              <Link href="/checkout" className="primary-button summary-button" data-testid="cart-checkout">Tiến hành đặt hàng <span aria-hidden="true">→</span></Link>
             )}
             <Link href="/" className="summary-back-link">Tiếp tục chọn món</Link>
           </aside>

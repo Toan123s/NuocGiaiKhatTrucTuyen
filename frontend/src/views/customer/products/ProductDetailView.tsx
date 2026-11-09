@@ -73,16 +73,16 @@ export function ProductDetailView({ product }: ProductDetailViewProps) {
   };
 
   return (
-    <div className="container">
+    <div className="container" data-testid="product-detail" data-product-id={product.id}>
       {toast?.show && (
-        <div className="alert toast-notification" role="status">
+        <div className="alert toast-notification" role="status" data-testid="add-to-cart-confirmation">
           <div className="toast-icon">✓</div>
           <div className="toast-body">
             <h4 className="toast-title">{toast.message}</h4>
             <p className="toast-desc">{toast.details}</p>
           </div>
           <div className="toast-actions">
-            <Link href="/cart" className="toast-cart-btn">
+            <Link href="/cart" className="toast-cart-btn" data-testid="view-cart-link">
               Xem giỏ hàng
             </Link>
             <button
@@ -140,6 +140,8 @@ export function ProductDetailView({ product }: ProductDetailViewProps) {
                   <button
                     key={s.name}
                     type="button"
+                    data-testid={`size-option-${s.name}`}
+                    aria-pressed={selectedSize === s.name}
                     onClick={() => setSelectedSize(s.name)}
                     className={`size-button ${
                       selectedSize === s.name ? "active" : ""
@@ -164,6 +166,7 @@ export function ProductDetailView({ product }: ProductDetailViewProps) {
                   <label key={t.id} className="topping-item">
                     <input
                       type="checkbox"
+                      data-testid={`topping-option-${t.id}`}
                       checked={selectedToppings.includes(t.id)}
                       onChange={() => toggleTopping(t.id)}
                     />
@@ -180,6 +183,7 @@ export function ProductDetailView({ product }: ProductDetailViewProps) {
           <div className="option-group">
             <label className="option-label">Ghi chú:</label>
             <textarea
+              data-testid="product-note"
               className="option-textarea"
               placeholder="Ghi yêu cầu của bạn tại đây..."
               value={note}
@@ -191,6 +195,7 @@ export function ProductDetailView({ product }: ProductDetailViewProps) {
           <button
             type="button"
             className="primary-button add-to-cart-btn"
+            data-testid="add-to-cart"
             onClick={handleAddToCart}
           >
             Thêm vào giỏ hàng •{" "}

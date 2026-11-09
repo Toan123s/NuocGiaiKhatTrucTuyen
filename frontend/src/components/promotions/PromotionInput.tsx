@@ -54,7 +54,7 @@ export function PromotionInput({
   const message = inputError ?? error;
 
   return (
-    <section className="promotion-input" aria-labelledby="promotion-title">
+    <section className="promotion-input" aria-labelledby="promotion-title" data-testid="promotion-input">
       <h2 id="promotion-title">Mã khuyến mãi</h2>
       <form className="promotion-form" onSubmit={handleSubmit}>
         <label className="sr-only" htmlFor="promotion-code">
@@ -62,6 +62,7 @@ export function PromotionInput({
         </label>
         <input
           id="promotion-code"
+          data-testid="promotion-code"
           type="text"
           value={code}
           placeholder="Nhập mã khuyến mãi"
@@ -73,7 +74,7 @@ export function PromotionInput({
           }}
           disabled={isApplying}
         />
-        <button type="submit" disabled={isApplying}>
+        <button type="submit" data-testid="promotion-apply" disabled={isApplying}>
           {isApplying ? "Đang kiểm tra..." : "Áp dụng"}
         </button>
       </form>

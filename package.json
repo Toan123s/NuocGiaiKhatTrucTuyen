@@ -18,11 +18,13 @@
     "db:migrate": "npm run db:migrate -w backend",
     "db:seed": "npm run db:seed -w backend",
     "db:check": "npm run db:check -w backend",
+    "test:e2e": "playwright test tests/e2e/checkout.spec.ts",
     "format": "prettier --write frontend/src backend/src backend/scripts backend/test docs README.md"
   },
   "devDependencies": {
     "@electric-sql/pglite": "^0.5.10",
     "@eslint/js": "^9.30.0",
+    "@playwright/test": "^1.65.0",
     "bcryptjs": "^3.0.3",
     "concurrently": "^9.2.0",
     "eslint": "^9.30.0",

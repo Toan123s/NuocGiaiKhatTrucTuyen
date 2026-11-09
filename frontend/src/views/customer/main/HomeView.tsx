@@ -85,7 +85,7 @@ export function HomeView({
           </span>
         </div>
       </section>
-      <section id="menu" className="container menu-section">
+      <section id="menu" className="container menu-section" data-testid="menu-section">
         <div className="menu-heading">
           <div>
             <div className="eyebrow">THỰC ĐƠN BREWLITE</div>
@@ -95,6 +95,7 @@ export function HomeView({
           <label className="search">
             <span aria-hidden="true">⌕</span>
             <input
+              data-testid="menu-search"
               aria-label="Tìm đồ uống"
               placeholder="Tìm món bạn thích…"
               value={search}
@@ -124,7 +125,7 @@ export function HomeView({
           </span>
         </div>
         {loadError ? (
-          <div className="state" role="alert">
+          <div className="state" role="alert" data-testid="menu-load-error">
             <h3>Chưa tải được thực đơn</h3>
             <p>Vui lòng thử lại sau ít phút.</p>
             <button
@@ -135,7 +136,7 @@ export function HomeView({
             </button>
           </div>
         ) : visible.length === 0 ? (
-          <div className="state">
+          <div className="state" data-testid="menu-empty-state">
             <h3>
               {products.length === 0
                 ? "Thực đơn đang được cập nhật"
@@ -148,7 +149,7 @@ export function HomeView({
             </p>
           </div>
         ) : (
-          <div className="product-grid">
+          <div className="product-grid" data-testid="product-grid">
             {visible.map((p) => (
               <ProductCard key={p.id} product={p} />
             ))}

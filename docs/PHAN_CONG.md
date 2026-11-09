@@ -46,6 +46,8 @@ Các đường dẫn frontend rút gọn `views/`, `features/`, `components/`, `
 - Không viết SQL, transaction tạo đơn hoặc giữ/hoàn tồn. Các việc đó thuộc TV4.
 - Test topping khác thứ tự vẫn gộp, số lượng biên, giỏ rỗng, reload, login quay lại, mã lỗi và hết hàng từ API.
 
+Phối hợp E2E: các selector ổn định trên Menu, Chi tiết món, Giỏ hàng và Checkout được bàn giao tại [docs/TV2_E2E_SELECTORS.md](TV2_E2E_SELECTORS.md) để TV6 dùng khi viết Playwright.
+
 ## Thành viên 3 Tài khoản bảo mật và CI
 
 **Frontend:** frontend/src/views/auth/; features/auth/auth.service.ts; lib/api.ts; app/login và app/register.
