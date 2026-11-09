@@ -18,7 +18,7 @@
     "db:migrate": "npm run db:migrate -w backend",
     "db:seed": "npm run db:seed -w backend",
     "db:check": "npm run db:check -w backend",
-    "test:e2e": "playwright test tests/e2e/checkout.spec.ts",
+    "test:e2e": "playwright test tests/e2e",
     "format": "prettier --write frontend/src backend/src backend/scripts backend/test docs README.md"
   },
   "devDependencies": {
