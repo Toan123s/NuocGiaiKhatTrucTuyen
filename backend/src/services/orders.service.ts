@@ -176,42 +176,6 @@ export class OrdersService {
     });
   }
 
-  // Job hủy đơn PENDING quá hạn; mỗi đơn một transaction. Chưa có lịch gọi hàm này.
-  async expirePendingOrders(): Promise<number> {
-    const expiredIds = await this.db.withTransaction((client) =>
-      this.orderModel.findExpiredPendingOrders(client),
-    );
-
-    let cancelled = 0;
-    for (const orderId of expiredIds) {
-      try {
-        await this.db.withTransaction(async (client) => {
-          const order = await this.orderModel.findForUpdate(orderId, client);
-          if (order === null || order.status !== "PENDING") {
-            return;
-          }
-          if (await this.orderModel.hasProcessingPayment(orderId, client)) {
-            return;
-          }
-          const changed = await this.orderModel.updateStatus(
-            orderId,
-            "PENDING",
-            "CANCELLED",
-            client,
-          );
-          if (!changed) {
-            return;
-          }
-          await this.inventoryService.releaseStock(orderId, client);
-          cancelled++;
-        });
-      } catch (error) {
-        console.error(`Hết hạn đơn ${orderId} thất bại`, error);
-      }
-    }
-    return cancelled;
-  }
-
   // PAYMENT_FAILED -> PENDING: giữ tồn mới trước, hết hàng thì rollback và đơn vẫn PAYMENT_FAILED.
   async preparePaymentRetry(userId: string, orderId: string) {
     return this.db.withTransaction(async (client) => {

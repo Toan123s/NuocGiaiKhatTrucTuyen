@@ -34,7 +34,6 @@ Nhánh PR gợi ý: `tv3-auth-ci`. Đường dẫn tính từ gốc repo.
 - `.env_vidu`: sau merge có hai dòng `JWT_SECRET` (một dòng mẫu cũ `replace_with_a_random_secret` do commit khác thêm vào, 28 ký tự và chứa `replace_` nên backend sẽ từ chối). Đã gộp thành một khối.
 - `backend/test/menu.test.ts`: bỏ `/products/abc` khỏi danh sách "khung 501" vì TV1 đã làm xong chi tiết món (trả 404), test đó đang đỏ trên `main`.
 
-Đợt thêm tính năng quên mật khẩu (mục 11): thêm migration `backend/database/008_password_reset.sql` (schema dùng chung, cần nhóm đồng ý), thêm 2 provider vào `backend/src/app.module.ts`, thêm cảnh báo cấu hình vào `backend/src/main.ts`, thêm biến môi trường vào `.env_vidu`, và thêm link "Quên mật khẩu?" vào `LoginView.tsx`.
 
 ## 3. Đã làm gì
 
@@ -139,40 +138,6 @@ Workflow **Check scaffold**, job **`check`**: báo tên này cho TV6. `ci.yml` c
 - Nhắn nhóm: TV2 chuyển người chưa đăng nhập sang `/login?returnUrl=/checkout` (hoặc dùng `authorizedRequest`); TV4/5/6 dùng `JwtAuthGuard` + `@CurrentUser()` rồi mới bỏ 501 của route mình.
 - API đơn của TV4 (`POST /orders`, `POST /orders/:id/cancel`) và thanh toán của TV5 hiện vẫn là khung trả 501 nên chưa gắn guard; khi triển khai, gắn `@UseGuards(JwtAuthGuard)` và `@CurrentUser()` rồi sửa test 501 của route đó (`orders-auth.test.ts` là mẫu).
 - `package.json` gốc đang có thêm mục `dependencies.jsonwebtoken` (do chạy `npm i` ở gốc); backend đã khai báo riêng. Dọn bằng `npm uninstall jsonwebtoken` ở gốc repo rồi commit lại `package-lock.json`.
-- `.env_vidu` có `NEXT_PUBLIC_SEPAY_WEBHOOK_API_KEY`: mọi biến `NEXT_PUBLIC_*` bị nhúng vào trình duyệt, nên không bao giờ đặt khóa thật vào đó (nhờ TV5 xem lại tên biến, giá trị mẫu hiện là một URL).
+- Mọi biến `NEXT_PUBLIC_*` bị nhúng vào trình duyệt; không đặt secret vào các biến này.
 - `npm run format` hiện sẽ sửa 48 file ngoài phạm vi TV3 (chủ yếu do khác biệt kiểu xuống dòng và dòng dài); nên làm trong một commit riêng của cả nhóm, đừng gộp vào PR Auth.
 - Đừng gửi hoặc commit file `.env` (chứa cấu hình cục bộ của bạn); `.gitignore` đã chặn, nhưng nhớ khi nén thư mục để gửi.
-
-## 11. Quên mật khẩu
-
-**Luồng người dùng:** trang `/login` có link "Quên mật khẩu?" dẫn tới `/forgot-password`. Người dùng nhập email, nhận thư chứa liên kết `/reset-password#token=...`, mở liên kết, nhập mật khẩu mới rồi được đưa về `/login` để đăng nhập bằng mật khẩu mới.
-
-| Endpoint                     | Body                  | Thành công                                                           | Lỗi                                                                                                    |
-| ---------------------------- | --------------------- | -------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------ |
-| `POST /auth/forgot-password` | `{ email }`           | 200 `{ message }`, **luôn cùng một thông báo** dù email có hay không | 400 `VALIDATION_FAILED` (email sai định dạng), 503                                                     |
-| `POST /auth/reset-password`  | `{ token, password }` | 200 `{ message }`                                                    | 400 `VALIDATION_FAILED` (mật khẩu yếu), 400 `RESET_TOKEN_INVALID` (hết hạn/đã dùng/không có thật), 503 |
-
-**Cơ sở dữ liệu:** bảng mới `password_reset_tokens` trong `backend/database/008_password_reset.sql`. Chạy `npm run db:migrate` (runner tự nhận file mới). Bảng này thuộc schema dùng chung nên cần báo nhóm trước khi merge.
-
-**Thiết kế bảo mật:**
-
-- Token ngẫu nhiên 256 bit; DB chỉ lưu mã băm SHA-256, nên lộ DB cũng không dùng được token. Mặc định hết hạn sau 30 phút (`PASSWORD_RESET_EXPIRES_IN_MINUTES`).
-- Dùng đúng một lần: đổi mật khẩu, đánh dấu token đã dùng và vô hiệu hóa mọi token khác của tài khoản nằm trong **một câu SQL** nên hai request song song cùng token chỉ một cái thành công. Yêu cầu liên kết mới sẽ vô hiệu hóa liên kết cũ.
-- Không lộ email nào đã đăng ký: `forgot-password` luôn trả cùng phản hồi; email được gửi không chặn phản hồi.
-- Giới hạn tần suất theo tài khoản, tính trong DB: tối đa 1 yêu cầu mỗi 60 giây và 5 yêu cầu mỗi giờ.
-- Liên kết đặt token sau dấu `#` để token không bị gửi lên máy chủ web hay header Referer; trang đặt mật khẩu đọc token rồi xóa nó khỏi thanh địa chỉ. Địa chỉ web trong liên kết lấy từ cấu hình, không lấy từ header của request.
-- Email chỉ là văn bản thuần (không HTML). Production không bao giờ in liên kết vào log.
-
-**Gửi email:** mặc định `ConsoleMailer` in liên kết ra console của backend khi phát triển (tìm dòng `[DEV] Liên kết đặt lại mật khẩu`). Muốn gửi email thật: chạy `npm install nodemailer -w backend` rồi đặt `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS`, `MAIL_FROM` trong `.env` (mẫu trong `.env_vidu`). Nếu đặt `SMTP_HOST` mà chưa cài `nodemailer`, thao tác gửi sẽ ghi lỗi rõ ràng vào log.
-
-**Cách thử tay:** chạy `npm run db:migrate`, `npm run dev`, mở `/login`, bấm "Quên mật khẩu?", nhập `khach01@brewlite.test`, rồi sao chép liên kết từ console của backend dán vào trình duyệt.
-
-**Giới hạn đã biết:**
-
-- Đổi mật khẩu **không** thu hồi JWT đã cấp: phiên đăng nhập cũ vẫn dùng được tới khi hết hạn (mặc định 1 giờ). Muốn thu hồi ngay cần thêm cột phiên bản token và kiểm tra trong guard (tốn một truy vấn DB cho mỗi request cần đăng nhập, ảnh hưởng mọi TV nên cần nhóm quyết định).
-- Chưa giới hạn theo địa chỉ IP. Giới hạn theo tài khoản cũng có nghĩa kẻ xấu có thể chiếm hết 5 lượt trong giờ để người thật tạm thời không yêu cầu được liên kết mới.
-- Thời gian phản hồi giữa email có và không có tài khoản chênh nhau vài mili giây (chỉ có truy vấn ghi thêm), chưa san bằng.
-- Đăng ký tài khoản vẫn trả 409 khi email đã tồn tại, nên vẫn dò được email đã đăng ký qua trang đăng ký (đánh đổi vì trải nghiệm).
-- `SmtpMailer` mới chỉ được kiểm thử với nodemailer giả, chưa thử với máy chủ SMTP thật.
-
-**Đã kiểm chứng (thư viện thật):** 105/105 test backend qua, trong đó 21 test mới (12 test đơn vị và 9 test tích hợp đi qua HTTP với PGlite có schema thật cộng migration 008); khi tạm phá 5 chỗ quan trọng (bỏ điều kiện "chưa dùng", bỏ điều kiện "còn hạn", không vô hiệu hóa liên kết cũ, không vô hiệu hóa token khác, lộ email chưa đăng ký) test đều đỏ. `tsc` backend và frontend sạch, ESLint 0 lỗi. Kịch bản trình duyệt thật với backend thật: 11/11 qua (link từ trang đăng nhập, email lạ và email thật nhận cùng thông báo, token bị xóa khỏi thanh địa chỉ, đặt mật khẩu thành công rồi đăng nhập bằng mật khẩu mới, dùng lại liên kết bị từ chối, 360px không tràn ngang). Chưa kiểm chứng: `next build`, gửi email qua SMTP thật, chạy trên GitHub Actions.

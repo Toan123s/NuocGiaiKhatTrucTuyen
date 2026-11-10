@@ -4,8 +4,6 @@ import {
   authConfig,
   ConfigurationError,
   dataSource,
-  mailConfig,
-  passwordResetConfig,
   usesLocalSampleJwtSecret,
 } from "./config/environment.js";
 import { NestFactory } from "@nestjs/core";
@@ -21,13 +19,6 @@ async function bootstrap() {
   // Dừng ngay nếu thiếu JWT_SECRET thay vì để lỗi lộ ra ở request đăng nhập đầu tiên.
   if (dataSource() === "postgres") {
     authConfig();
-    passwordResetConfig();
-    if (!mailConfig().smtp)
-      console.warn(
-        process.env.NODE_ENV === "production"
-          ? "Cảnh báo: chưa cấu hình SMTP_HOST nên không gửi được email quên mật khẩu."
-          : "Quên mật khẩu: chưa cấu hình SMTP_HOST, liên kết đặt lại mật khẩu sẽ được in ra console này.",
-      );
     if (usesLocalSampleJwtSecret())
       console.warn(
         "Cảnh báo: JWT_SECRET đang là giá trị mẫu, chỉ dùng trên máy local. Không triển khai với giá trị này.",

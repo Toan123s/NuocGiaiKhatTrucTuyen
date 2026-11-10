@@ -5,14 +5,16 @@ import "reflect-metadata";
 import { PGlite } from "@electric-sql/pglite";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
-import { resolve } from "node:path";
+import { dirname, resolve } from "node:path";
 import { after, before, test } from "node:test";
+import { fileURLToPath } from "node:url";
 import { Module, type INestApplication } from "@nestjs/common";
 import { NestFactory } from "@nestjs/core";
-import { sign } from "jsonwebtoken";
+import jwt from "jsonwebtoken";
 import { AppModule } from "../src/app.module";
 import { DatabaseService } from "../src/config/db";
 
+const __dirname = dirname(fileURLToPath(import.meta.url));
 const SECRET = "test-secret-for-brewlite-orders-auth-0123456789";
 const SEED_PASSWORD = "BrewLite123!";
 const pg = new PGlite();
@@ -44,8 +46,7 @@ before(async () => {
   process.env.JWT_SECRET = SECRET;
   await pg.exec("BEGIN");
   await pg.exec(sql("001_schema.sql"));
-  await pg.exec(sql("002_integrity.sql"));
-  await pg.exec(sql("003_seed.sql"));
+  await pg.exec(sql("002_seed.sql"));
   await pg.exec("COMMIT");
   const top = (
     await pg.query<{
@@ -182,12 +183,12 @@ test("chi tiết đơn: chủ đơn xem được (200), người khác nhận 40
 });
 
 test("token sai hoặc hết hạn bị từ chối bằng 401 kèm mã lỗi", async () => {
-  const expired = sign(
+  const expired = jwt.sign(
     { email: owner.email, exp: Math.floor(Date.now() / 1000) - 30 },
     SECRET,
     { subject: owner.userId },
   );
-  const wrongKey = sign({ email: owner.email }, "khoa-khac-".padEnd(40, "z"), {
+  const wrongKey = jwt.sign({ email: owner.email }, "khoa-khac-".padEnd(40, "z"), {
     subject: owner.userId,
     expiresIn: 60,
   });

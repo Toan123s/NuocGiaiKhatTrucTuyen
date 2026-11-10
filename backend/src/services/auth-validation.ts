@@ -64,26 +64,6 @@ export function parseRegisterInput(body: unknown): RegisterInput {
   if (Object.keys(errors).length > 0) throw validationException(errors);
   return { email, password };
 }
-// Token đặt lại mật khẩu: 32 byte ngẫu nhiên mã hóa base64url = đúng 43 ký tự.
-export const RESET_TOKEN_PATTERN = /^[A-Za-z0-9_-]{43}$/;
-export function parseForgotPasswordInput(body: unknown): { email: string } {
-  const raw = asRecord(body);
-  const email = typeof raw.email === "string" ? normalizeEmail(raw.email) : "";
-  const message = emailError(email);
-  if (message) throw validationException({ email: message });
-  return { email };
-}
-export function parseResetPasswordInput(body: unknown): {
-  token: string;
-  password: string;
-} {
-  const raw = asRecord(body);
-  const token = typeof raw.token === "string" ? raw.token.trim() : "";
-  const password = typeof raw.password === "string" ? raw.password : "";
-  const message = newPasswordError(password);
-  if (message) throw validationException({ password: message });
-  return { token, password };
-}
 export function parseLoginInput(body: unknown): LoginInput {
   const raw = asRecord(body);
   const email = typeof raw.email === "string" ? normalizeEmail(raw.email) : "";

@@ -283,20 +283,6 @@ CREATE CONSTRAINT TRIGGER users_points_consistency AFTER INSERT OR UPDATE ON use
 DROP TRIGGER IF EXISTS ledger_points_consistency ON loyalty_transactions;
 CREATE CONSTRAINT TRIGGER ledger_points_consistency AFTER INSERT ON loyalty_transactions DEFERRABLE INITIALLY DEFERRED FOR EACH ROW EXECUTE FUNCTION check_user_points_balance();
 
--- ===== 004_sepay.sql =====
-
--- SePay webhook metadata. Payment state changes remain transaction-controlled by the webhook service.
-ALTER TABLE payments
-  ADD COLUMN IF NOT EXISTS provider TEXT NOT NULL DEFAULT 'LEGACY',
-  ADD COLUMN IF NOT EXISTS provider_transaction_id TEXT,
-  ADD COLUMN IF NOT EXISTS provider_reference TEXT,
-  ADD COLUMN IF NOT EXISTS provider_payload JSONB,
-  ADD COLUMN IF NOT EXISTS webhook_received_at TIMESTAMPTZ;
-
-CREATE UNIQUE INDEX IF NOT EXISTS payments_provider_transaction_unique
-  ON payments(provider, provider_transaction_id)
-  WHERE provider_transaction_id IS NOT NULL;
-
 -- ===== 005_ingredient_inventory.sql =====
 
 CREATE TABLE IF NOT EXISTS ingredients (
@@ -357,22 +343,3 @@ BEGIN
     END LOOP;
   END LOOP;
 END $$;
-
-
--- ===== 008_password_reset.sql =====
-
--- TV3: quÃªn máº­t kháº©u. Chá»‰ lÆ°u mÃ£ bÄƒm SHA-256 cá»§a token (token gá»‘c chá»‰ náº±m trong email gá»­i cho ngÆ°á»i dÃ¹ng).
--- Token dÃ¹ng má»™t láº§n (used_at) vÃ  cÃ³ háº¡n (expires_at). XÃ³a tÃ i khoáº£n thÃ¬ xÃ³a luÃ´n token cá»§a tÃ i khoáº£n Ä‘Ã³.
-CREATE TABLE IF NOT EXISTS password_reset_tokens (
-  id TEXT PRIMARY KEY,
-  user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-  token_hash TEXT NOT NULL UNIQUE CHECK (token_hash ~ '^[0-9a-f]{64}$'),
-  expires_at TIMESTAMPTZ NOT NULL,
-  used_at TIMESTAMPTZ,
-  created_at TIMESTAMPTZ NOT NULL DEFAULT now()
-);
-
--- Phá»¥c vá»¥ giá»›i háº¡n sá»‘ yÃªu cáº§u theo tÃ i khoáº£n vÃ  dá»n token cÅ©.
-CREATE INDEX IF NOT EXISTS password_reset_tokens_user_created
-  ON password_reset_tokens (user_id, created_at DESC);
-

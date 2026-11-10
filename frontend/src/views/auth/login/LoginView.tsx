@@ -16,7 +16,6 @@ const NOTICES: Record<string, string> = {
     "Phiên đăng nhập đã hết hạn. Đăng nhập lại để tiếp tục, giỏ hàng của bạn vẫn còn nguyên.",
   required: "Đăng nhập để tiếp tục đặt món. Giỏ hàng của bạn vẫn còn nguyên.",
   registered: "Tài khoản đã sẵn sàng. Đăng nhập để tiếp tục.",
-  "password-reset": "Mật khẩu đã được đặt lại. Đăng nhập bằng mật khẩu mới.",
 };
 export function LoginView() {
   const router = useRouter();
@@ -97,9 +96,6 @@ export function LoginView() {
           error={errors.password}
           disabled={submitting}
         />
-        <p className={styles.forgot}>
-          <Link href="/forgot-password">Quên mật khẩu?</Link>
-        </p>
         <button
           type="submit"
           className={`primary-button ${styles.submit}`}

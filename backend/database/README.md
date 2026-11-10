@@ -35,13 +35,10 @@ TV4 vẫn phải tính đơn giá chính thức từ catalog trong service; data
 
 002 không thay JWT/kiểm tra quyền sở hữu ở API, không gọi gateway, không tự giữ/hoàn tồn hoặc tự đặt PAID. TV4 vẫn dùng UPDATE theo stock/version và cùng client transaction. Index/constraint chống ghi sai không thay cơ chế idempotency trả lại kết quả trong service.
 
-## SePay sandbox
+## Thanh toán mô phỏng
 
-Migration `004_sepay.sql` bổ sung metadata giao dịch SePay. Endpoint `POST /webhooks/sepay`
-nhận webhook có header `Authorization: Apikey <SEPAY_WEBHOOK_API_KEY>`. Nội dung chuyển
-khoản phải chứa `BREWLITE-ORDER-<order UUID>` và số tiền phải bằng `orders.total`.
-Chỉ webhook hợp lệ mới được ghi payment `SUCCEEDED`, chuyển đơn `PENDING` thành `PAID`
-và ghi `EARN` trong cùng transaction. Gửi lại cùng `id` SePay là thao tác idempotent.
+`POST /payments` dùng cổng mock Ví/Thẻ và `Idempotency-Key`. Không nhận webhook bên ngoài.
+Các cột metadata giao dịch cũ được giữ để tương thích database đã có, không xóa lịch sử thanh toán.
 
 ## Tồn kho nguyên liệu
 

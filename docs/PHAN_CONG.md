@@ -68,7 +68,7 @@ Các đường dẫn frontend rút gọn `views/`, `features/`, `components/`, `
 - previewOrder/createOrder nhận dữ liệu từ UI checkout TV2; backend tính lại giá và gọi PromotionsService TV1; trả orderId/status/subtotal/discount/total chính thức.
 - Tạo đơn PENDING + chi tiết + giữ tồn trong cùng PoolClient/transaction. 002 chỉ cho lập chi tiết trong transaction tạo đơn; không tạo order xong commit rồi mới thêm item.
 - reserveStock/decreaseStock phải gộp lượng theo productId, kiểm tra stock/version, số dòng cập nhật; rollback toàn bộ khi lỗi/tranh tồn.
-- cancelOrder/expirePendingOrders/releaseStock/restoreStockOnce hoàn tồn đúng một lần; không hủy khi Payment PROCESSING hoặc thành công.
+- cancelOrder/releaseStock/restoreStockOnce hoàn tồn đúng một lần; không hủy khi Payment PROCESSING hoặc thành công. Không có job tự hủy đơn.
 - preparePaymentRetry giữ tồn mới trước khi đưa PAYMENT_FAILED về PENDING; phối hợp TV5, không tự gọi gateway hoặc tự cộng điểm.
 - Không làm CheckoutView (thuộc TV2). previewOrder mới có service khung, chưa có endpoint preview riêng; thống nhất contract với TV1/TV2 nếu thêm.
 - Test giá client bị sửa, hai người tranh tồn cuối, rollback, hủy/hết hạn, dấu hoàn tồn và retry hết hàng.

@@ -3,7 +3,7 @@
 // TV5 điều hướng sang đây kèm orderId. Kết quả lấy từ backend (GET /orders/:id, gồm trạng thái đơn + các lần thanh toán),
 // KHÔNG tin tham số status trên URL. Chỉ xóa giỏ khi backend xác nhận đơn đã trả tiền (đúng một lần).
 // Timeout/mất mạng không bị coi là thất bại: đơn và tồn vẫn được giữ, khách có thể kiểm tra lại.
-// Luồng SePay: tiền về qua webhook nên đơn có thể còn PENDING (chưa có giao dịch) một lúc; trang vẫn chờ chứ không báo "chưa thanh toán" ngay.
+// Đọc kết quả cổng mock từ backend; không suy ra thành công từ URL hay QR.
 import { Suspense, useEffect, useRef } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
@@ -163,9 +163,7 @@ function PaymentStatusContent() {
           <>
             <h1>Chưa nhận được thanh toán</h1>
             <p>
-              Hệ thống chưa thấy giao dịch cho đơn này. Nếu bạn đã chuyển khoản,
-              vui lòng chờ thêm rồi bấm “Kiểm tra lại” và không chuyển tiền lần
-              nữa.
+              Chưa có kết quả từ cổng mô phỏng. Bấm “Kiểm tra lại” để đọc trạng thái từ backend.
             </p>
             <div className="ord-actions">
               <button
@@ -187,8 +185,7 @@ function PaymentStatusContent() {
           <>
             <h1>Đang chờ xác nhận thanh toán</h1>
             <p>
-              Đang chờ ngân hàng xác nhận chuyển khoản. Vui lòng không đóng
-              trang này và không chuyển tiền lần nữa…
+              Đang chờ kết quả thanh toán mô phỏng từ backend. Không có tiền thật được chuyển.
             </p>
           </>
         )}

@@ -79,9 +79,7 @@ export function derivePaymentOutcome(order: OrderDetail): PaymentOutcome {
 }
 
 /**
- * Còn phải hỏi lại backend không. Luồng SePay: khách chuyển khoản xong, webhook mới tạo payment (SUCCEEDED) và đổi
- * đơn sang PAID trong một transaction, nên trước đó đơn vẫn PENDING và CHƯA có dòng payment nào (AWAITING_PAYMENT).
- * Luồng cổng mô phỏng của TV5 thì có attempt PROCESSING. Cả hai đều phải tiếp tục polling.
+ * Còn phải hỏi lại backend khi giao dịch mock đang xử lý hoặc đơn chưa có giao dịch.
  */
 export function isStillWaiting(outcome: PaymentOutcome): boolean {
   return outcome === "PROCESSING" || outcome === "AWAITING_PAYMENT";

@@ -152,8 +152,7 @@ function OrderBody({
 
       {order.status === "PENDING" ? (
         <p className="ord-notice">
-          Đơn được giữ đến {formatDateTime(order.expiresAt)}. Quá hạn mà chưa
-          thanh toán, đơn sẽ tự hủy.
+          Đơn đang chờ thanh toán. Bạn có thể thanh toán hoặc hủy đơn để hoàn tồn kho.
         </p>
       ) : null}
       {cancel.message ? (

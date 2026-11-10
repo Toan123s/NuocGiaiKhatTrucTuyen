@@ -38,23 +38,6 @@ export class UsersService {
       }
     });
   }
-  createPasswordResetToken(
-    userId: string,
-    tokenHash: string,
-    ttlSeconds: number,
-  ): Promise<boolean> {
-    return this.run(() =>
-      this.model.createPasswordResetToken(userId, tokenHash, ttlSeconds),
-    );
-  }
-  resetPasswordWithToken(
-    tokenHash: string,
-    passwordHash: string,
-  ): Promise<boolean> {
-    return this.run(() =>
-      this.model.resetPasswordWithToken(tokenHash, passwordHash),
-    );
-  }
   // Trang tài khoản/GET /auth/me: chỉ đọc user từ id trong JWT đã xác thực.
   async getCurrentUser(userId: string): Promise<PublicUser> {
     const user = await this.run(() => this.model.findById(userId));

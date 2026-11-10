@@ -1,7 +1,7 @@
 "use client";
 // TV6 — pollPaymentStatus / stopPolling / checkPaymentStatus gom thành một hook.
 // Đọc đơn từ GET /orders/:id (backend TV6, đã kèm các lần thanh toán + trạng thái đơn) nên không tin status trên URL.
-// Tiếp tục hỏi khi attempt đang PROCESSING HOẶC đơn còn PENDING chưa có giao dịch (chờ webhook SePay báo tiền về).
+// Tiếp tục hỏi khi attempt đang PROCESSING hoặc đơn còn PENDING chưa có giao dịch.
 // Dừng khi có kết quả cuối, khi hết thời gian chờ, hoặc khi component unmount.
 import { useEffect, useState } from "react";
 import {

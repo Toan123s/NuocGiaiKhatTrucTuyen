@@ -95,38 +95,6 @@ async function simulatePaymentFailure(orderId: string, amount: number) {
   });
 }
 
-// Đơn đã quá hạn (chèn thẳng) và trừ tồn thủ công như khi createOrder đã giữ tồn.
-async function insertExpiredOrder(
-  id: string,
-  quantity: number,
-  processingPayment: boolean,
-) {
-  const total = UNIT_S * quantity;
-  await tx(async (c) => {
-    await c.query(
-      `INSERT INTO orders (id, user_id, subtotal, total, created_at, expires_at)
-       VALUES ($1, $2, $3, $3, now() - interval '1 hour', now() - interval '30 minutes')`,
-      [id, USER_ID, total],
-    );
-    await c.query(
-      `INSERT INTO order_items (id, order_id, product_id, product_name, size, topping_ids, quantity, unit_price, line_total)
-       VALUES ($1, $2, $3, 'Trà TV4', 'S', '[]'::jsonb, $4, $5, $6)`,
-      [`${id}-i`, id, PRODUCT_ID, quantity, UNIT_S, total],
-    );
-    if (processingPayment) {
-      await c.query(
-        `INSERT INTO payments (id, order_id, idempotency_key, payload_hash, amount, method)
-         VALUES ($1, $2, $3, repeat('c', 64), $4, 'CARD')`,
-        [`pay-${id}`, id, `key-${id}`, total],
-      );
-    }
-  });
-  await db.query("UPDATE products SET stock = stock - $1 WHERE id = $2", [
-    quantity,
-    PRODUCT_ID,
-  ]);
-}
-
 test("createOrder tính giá từ DB (bỏ qua giá client), giữ tồn và ghi đơn + chi tiết", async () => {
   // client cố gửi giá 1 đồng: phải bị bỏ qua
   const input = {
@@ -273,23 +241,6 @@ test("cancelOrder bị chặn khi đang có thanh toán PROCESSING", async () =>
   );
   assert.equal((await readOrder(db, created.orderId)).status, "PENDING");
   assert.equal(await readStock(db), 9);
-});
-
-test("expirePendingOrders hủy đơn quá hạn và hoàn tồn, bỏ qua đơn đang thanh toán/chưa hết hạn", async () => {
-  await insertExpiredOrder("s-exp-free", 2, false);
-  await insertExpiredOrder("s-exp-paying", 1, true);
-  const fresh = await createOrder(1);
-  assert.equal(await readStock(db), 6); // 10 - 2 - 1 - 1
-
-  const count = await service.expirePendingOrders();
-  assert.ok(count >= 1);
-
-  const free = await readOrder(db, "s-exp-free");
-  assert.equal(free.status, "CANCELLED");
-  assert.equal(free.stock_released, true);
-  assert.equal((await readOrder(db, "s-exp-paying")).status, "PENDING");
-  assert.equal((await readOrder(db, fresh.orderId)).status, "PENDING");
-  assert.equal(await readStock(db), 8); // chỉ hoàn 2 ly của đơn s-exp-free
 });
 
 test("preparePaymentRetry: giữ tồn mới rồi đưa PAYMENT_FAILED về PENDING", async () => {

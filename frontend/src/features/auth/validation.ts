@@ -25,7 +25,7 @@ export function validateLogin(email: string, password: string): FieldErrors {
     errors.password = "Mật khẩu không hợp lệ.";
   return errors;
 }
-// Quy tắc mật khẩu mới, dùng cho đăng ký và đặt lại mật khẩu (khớp backend/src/services/auth-validation.ts).
+// Quy tắc mật khẩu đăng ký (khớp backend/src/services/auth-validation.ts).
 function newPasswordError(password: string): string | undefined {
   if (password.length === 0) return "Nhập mật khẩu.";
   if (password.length < PASSWORD_MIN_LENGTH)
@@ -35,20 +35,6 @@ function newPasswordError(password: string): string | undefined {
   if (!/\p{L}/u.test(password) || !/\p{Nd}/u.test(password))
     return "Mật khẩu cần có cả chữ và số.";
   return undefined;
-}
-export function validateForgotPassword(email: string): FieldErrors {
-  const message = emailError(email);
-  return message ? { email: message } : {};
-}
-export function validateNewPassword(
-  password: string,
-  confirmPassword: string,
-): FieldErrors {
-  const message = newPasswordError(password);
-  if (message) return { password: message };
-  return confirmPassword === password
-    ? {}
-    : { confirmPassword: "Mật khẩu nhập lại chưa khớp." };
 }
 export function validateRegister(
   email: string,

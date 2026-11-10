@@ -43,16 +43,8 @@ function PaymentContent() {
   const [error, setError] = useState("");
   const [isProcessing, setIsProcessing] = useState(false);
   const [selectedMethod, setSelectedMethod] = useState<"WALLET" | "CARD">("WALLET");
-  const qrBankId = process.env.NEXT_PUBLIC_VIETQR_BANK_ID ?? "970426";
-  const qrAccountNo =
-    process.env.NEXT_PUBLIC_VIETQR_ACCOUNT_NO ?? "SBSEPAY354HYTS9068D";
-  const qrAccountName =
-    process.env.NEXT_PUBLIC_VIETQR_ACCOUNT_NAME ?? "BREWLITE";
-  const transferDescription = order
-    ? `BREWLITE-ORDER-${order.id}`
-    : "";
   const qrUrl = order
-    ? `https://img.vietqr.io/image/${qrBankId}-${qrAccountNo}-compact2.png?amount=${order.total}&addInfo=${encodeURIComponent(transferDescription)}&accountName=${encodeURIComponent(qrAccountName)}`
+    ? `https://api.qrserver.com/v1/create-qr-code/?size=280x280&data=${encodeURIComponent(`BREWLITE-MOCK:${order.id}:${order.total}`)}`
     : null;
 
   useEffect(() => {
@@ -179,10 +171,10 @@ function PaymentContent() {
 
         {qrUrl && (
           <div className="pay-qr">
-            <h3>Quét mã QR để chuyển khoản</h3>
-            <img className="pay-qr-image" src={qrUrl} alt="Mã QR chuyển khoản VietQR" />
+            <h3>Mã QR mô phỏng</h3>
+            <img className="pay-qr-image" src={qrUrl} alt="Mã QR minh họa cho đơn hàng, không dùng chuyển tiền thật" />
             <p>
-              Nội dung chuyển khoản: <strong>{transferDescription}</strong>
+              QR chỉ minh họa, không chuyển tiền thật. Chọn Ví/Thẻ rồi bấm Thanh toán để chạy cổng mô phỏng.
             </p>
           </div>
         )}

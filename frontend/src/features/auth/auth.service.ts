@@ -1,4 +1,4 @@
-// TV3 — Gắn /login, /register, /forgot-password, /reset-password vào API NestJS (POST /auth/...) và quản lý phiên phía trình duyệt.
+// TV3 — Gắn /login, /register vào API NestJS (POST /auth/...) và quản lý phiên phía trình duyệt.
 // TV2/TV5/TV6 gọi API cần đăng nhập qua authorizedRequest() ở cuối file: tự gắn Bearer token và xử lý 401.
 import { apiRequest, ApiError, type RequestOptions } from "@/lib/api-client";
 import type { AuthSession, PublicUser } from "@/types/auth";
@@ -27,22 +27,6 @@ export class AuthClient {
       body: { email, password },
     });
     return saveSession(session);
-  }
-  // POST /auth/forgot-password: luôn nhận cùng một thông báo dù email có tài khoản hay không.
-  async requestPasswordReset(email: string): Promise<string> {
-    const result = await apiRequest<{ message: string }>(
-      "/auth/forgot-password",
-      { method: "POST", body: { email } },
-    );
-    return result.message;
-  }
-  // POST /auth/reset-password. Token lấy từ liên kết trong email; lỗi RESET_TOKEN_INVALID nghĩa là liên kết hết hạn hoặc đã dùng.
-  async resetPassword(token: string, password: string): Promise<string> {
-    const result = await apiRequest<{ message: string }>(
-      "/auth/reset-password",
-      { method: "POST", body: { token, password } },
-    );
-    return result.message;
   }
   // Chỉ xóa phiên; giỏ hàng được giữ. Nơi gọi tự đưa người dùng về menu (xem AccountNav).
   logout(): void {

@@ -85,23 +85,6 @@ export class OrderModel {
     return result.rowCount === 1;
   }
 
-  async findExpiredPendingOrders(transaction: PoolClient): Promise<string[]> {
-    const result = await transaction.query(
-      `SELECT o.id
-       FROM orders o
-       WHERE o.status = 'PENDING'
-         AND o.expires_at < now()
-         AND NOT EXISTS (
-           SELECT 1
-           FROM payments p
-           WHERE p.status = 'PROCESSING'
-             AND p.order_id = o.id
-         )
-       FOR UPDATE OF o SKIP LOCKED`,
-    );
-    return result.rows.map((row) => row.id);
-  }
-
   async findForPricing(
     productIds: string[],
     transaction: PoolClient,

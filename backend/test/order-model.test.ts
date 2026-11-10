@@ -190,24 +190,12 @@ test("updateStatus chỉ đổi khi đúng trạng thái cũ", async () => {
   assert.equal(after.rows[0].status, "PENDING"); // ROLLBACK giữ nguyên trạng thái
 });
 
-test("findExpiredPendingOrders và hasProcessingPayment", async () => {
+test("hasProcessingPayment phân biệt đơn đang xử lý và chưa thanh toán", async () => {
   await tx(async (c) => {
     await insertExpiredOrder(c, "m-exp-free");
     await insertExpiredOrder(c, "m-exp-paying");
     await insertProcessingPayment(c, "m-exp-paying", "key-exp-paying");
   });
-  await createPending("m-fresh"); // chưa hết hạn
-
-  const ids = await tx((c) => model.findExpiredPendingOrders(c));
-  assert.ok(
-    ids.includes("m-exp-free"),
-    "đơn quá hạn, không thanh toán phải có",
-  );
-  assert.ok(
-    !ids.includes("m-exp-paying"),
-    "đơn đang thanh toán PROCESSING phải bị loại",
-  );
-  assert.ok(!ids.includes("m-fresh"), "đơn chưa hết hạn phải bị loại");
 
   assert.equal(
     await tx((c) => model.hasProcessingPayment("m-exp-paying", c)),

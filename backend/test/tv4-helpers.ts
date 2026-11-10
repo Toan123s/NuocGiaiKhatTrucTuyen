@@ -19,8 +19,7 @@ export async function createTestDb(): Promise<PGlite> {
   const sql = (name: string) =>
     readFileSync(resolve(__dirname, "../database", name), "utf8");
   await db.exec(sql("001_schema.sql"));
-  await db.exec(sql("002_integrity.sql"));
-  await db.exec(sql("003_seed.sql"));
+  await db.exec(sql("002_seed.sql"));
   // Sản phẩm riêng để test không phụ thuộc tồn kho của dữ liệu mẫu TV1.
   await db.query(
     `INSERT INTO products (id, name, category, price, stock, sizes, toppings)

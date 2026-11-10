@@ -17,8 +17,6 @@ import { ProductsService } from "./services/products.service.js";
 import { OrdersService } from "./services/orders.service.js";
 import { UsersService } from "./services/users.service.js";
 import { AuthService } from "./services/auth.service.js";
-import { PasswordResetService } from "./services/password-reset.service.js";
-import { Mailer, createMailer } from "./services/mailer.js";
 import { PromotionsService } from "./services/promotions.service.js";
 import { InventoryService } from "./services/inventory.service.js";
 import { ProductModel } from "./models/product.model.js";
@@ -29,9 +27,6 @@ import { InventoryModel } from "./models/inventory.model.js";
 import { PaymentModel } from "./models/payment.model.js";
 import { PaymentsService } from "./services/payments.service.js";
 
-import { SepayController } from "./sepay/sepay.controller.js";
-import { SepayModel } from "./sepay/sepay.model.js";
-import { SepayService } from "./sepay/sepay.services.js";
 
 @Module({
   controllers: [
@@ -41,7 +36,6 @@ import { SepayService } from "./sepay/sepay.services.js";
     CustomerOrdersController,
     OrdersController,
     PaymentsController,
-    SepayController,
   ],
   providers: [
     DatabaseService,
@@ -50,21 +44,15 @@ import { SepayService } from "./sepay/sepay.services.js";
     UserModel,
     UsersService,
     AuthService,
-    PasswordResetService,
-    { provide: Mailer, useFactory: () => createMailer() },
     OrderModel,
     OrdersService,
     PromotionModel,
     PromotionsService,
     InventoryModel,
     InventoryService,
-    SepayModel,
-    SepayService,
     CustomerOrdersService,
     CustomerOrderModel,
     OrderStateService,
-    SepayModel,
-    SepayService,
     LoyaltyModel,       
     LoyaltyService,     
     MockPaymentGateway,
