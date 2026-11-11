@@ -26,8 +26,10 @@ import {
   makeFakeDatabase,
   makeTx,
   readOrder,
-  readStock,
-  setStock,
+  readIngredientStock as readStock,
+  setIngredientStock as setStock,
+  readStock as readProductStock,
+  setStock as setProductStock,
   type Tx,
 } from "./tv4-helpers.js";
 
@@ -108,6 +110,12 @@ test("createOrder tính giá từ DB (bỏ qua giá client), giữ tồn và ghi
   assert.equal(result.discount, 0);
   assert.equal(result.total, unit * 2);
   assert.equal(await readStock(db), 8);
+  assert.equal(await readProductStock(db), 10, "đặt theo nguyên liệu không trừ thêm tồn sản phẩm");
+  const reservations = await db.query<{ quantity: number }>(
+    "SELECT quantity FROM order_ingredient_reservations WHERE order_id = $1 ORDER BY ingredient_id",
+    [result.orderId],
+  );
+  assert.deepEqual(reservations.rows.map((r) => r.quantity), [2, 2]);
 
   const rows = await db.query<{
     product_name: string;
@@ -284,7 +292,8 @@ test("preparePaymentRetry: giữ tồn mới rồi đưa PAYMENT_FAILED về PEN
   assert.equal(await readStock(db), 8);
 });
 
-test("InventoryService: reserveStock đủ/thiếu/không tồn tại, releaseStock trả true rồi false", async () => {
+test("InventoryService: nhánh tồn sản phẩm kiểm tra đủ/thiếu/không tồn tại", async () => {
+  await setProductStock(db, 10);
   await assert.rejects(
     () =>
       tx((c) =>
@@ -296,7 +305,7 @@ test("InventoryService: reserveStock đủ/thiếu/không tồn tại, releaseSt
   await tx((c) =>
     inventory.reserveStock([{ productId: PRODUCT_ID, quantity: 10 }], c),
   );
-  assert.equal(await readStock(db), 0);
+  assert.equal(await readProductStock(db), 0);
   await assert.rejects(
     () =>
       tx((c) =>
@@ -304,8 +313,9 @@ test("InventoryService: reserveStock đủ/thiếu/không tồn tại, releaseSt
       ),
     ConflictException,
   );
-  assert.equal(await readStock(db), 0);
+  assert.equal(await readProductStock(db), 0);
 
+  await setStock(db, 0);
   const created = await createOrder(1).catch(() => null);
   assert.equal(created, null); // kho đang 0 nên đặt phải thất bại
 });

@@ -67,13 +67,17 @@ test("API bảo vệ đơn hàng và thanh toán bằng xác thực", async () =
 });
 
 
-test("API còn khung trả 501, không nhận thanh toán giả", async () => {
+test("API không chấp nhận payload giả khi chưa đăng nhập", async () => {
   for (const [path, method] of [
     ["/orders", "POST"],
     ["/payments", "POST"],
   ]) {
-    const response = await fetch(`${origin}${path}`, { method });
-    assert.equal(response.status, 501, path);
+    const response = await fetch(`${origin}${path}`, {
+      method,
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ userId: "demo-user-01", amount: 1, status: "PAID" }),
+    });
+    assert.equal(response.status, 401, path);
   }
 });
 function postJson(path: string, body: unknown) {

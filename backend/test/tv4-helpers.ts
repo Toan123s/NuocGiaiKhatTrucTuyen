@@ -1,5 +1,5 @@
 // Hàm dùng chung cho test của TV4 (không phải file test vì không có đuôi .test.ts).
-// Dựng PostgreSQL thật bằng PGlite, nạp 001/002/003, thêm một sản phẩm riêng của TV4.
+// Dựng PostgreSQL bằng PGlite, nạp schema/seed và sản phẩm với công thức riêng.
 import { PGlite } from "@electric-sql/pglite";
 import { readFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
@@ -13,6 +13,7 @@ export const PRODUCT_ID = "tv4-tra";
 export const UNIT_S = 20000; // giá món size S
 export const EXTRA_M = 5000; // phụ phí size M
 export const TOPPING_TC = 7000; // topping "tc"
+export const INGREDIENT_ID = `legacy-product-${PRODUCT_ID}`;
 
 export async function createTestDb(): Promise<PGlite> {
   const db = new PGlite();
@@ -33,6 +34,22 @@ export async function createTestDb(): Promise<PGlite> {
       ]),
       JSON.stringify([{ id: "tc", name: "Trân châu", price: TOPPING_TC }]),
     ],
+  );
+  // Công thức test: mỗi ly dùng 1 piece nền; topping có kho riêng.
+  await db.query(
+    `INSERT INTO ingredients (id, name, unit, stock) VALUES
+       ($1, 'Nền trà test', 'piece', 10), ($2, 'Topping test', 'piece', 1000)`,
+    [INGREDIENT_ID, `topping-${PRODUCT_ID}`],
+  );
+  await db.query(
+    `INSERT INTO product_recipes (product_id, size, ingredient_id, quantity)
+     VALUES ($1, 'S', $2, 1), ($1, 'M', $2, 1)`,
+    [PRODUCT_ID, INGREDIENT_ID],
+  );
+  await db.query(
+    `INSERT INTO topping_recipes (product_id, topping_id, ingredient_id, quantity)
+     VALUES ($1, 'tc', $2, 1)`,
+    [PRODUCT_ID, `topping-${PRODUCT_ID}`],
   );
   return db;
 }
@@ -86,6 +103,17 @@ export async function setStock(database: PGlite, stock: number): Promise<void> {
     stock,
     PRODUCT_ID,
   ]);
+}
+
+export async function readIngredientStock(database: PGlite): Promise<number> {
+  const result = await database.query<{ stock: number }>(
+    "SELECT stock FROM ingredients WHERE id = $1", [INGREDIENT_ID],
+  );
+  return result.rows[0].stock;
+}
+
+export async function setIngredientStock(database: PGlite, stock: number): Promise<void> {
+  await database.query("UPDATE ingredients SET stock = $1 WHERE id = $2", [stock, INGREDIENT_ID]);
 }
 
 export async function readOrder(database: PGlite, orderId: string) {
